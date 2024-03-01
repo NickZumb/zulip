@@ -1,8 +1,12 @@
-FROM python:3.10-slim
-
 # Set the working directory
 WORKDIR /workspace
 
-# Install Python packages
-COPY requirements.txt /workspace/
-RUN pip install --no-cache-dir -r requirements.txt
+# Go into main repository Directory
+RUN cd zulip
+# Conncet to remote upstream
+RUN git remote add -f upstream https://github.com/zulip/zulip.git
+
+# From inside a clone of zulip.git:
+RUN ./tools/provision
+RUN source /srv/zulip-py3-venv/bin/activate
+RUN ./tools/run-dev  # starts the development server
