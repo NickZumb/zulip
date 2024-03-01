@@ -1,8 +1,11 @@
+# Specify Base
+FROM ubuntu:20.04
+
 # Set the working directory
 WORKDIR /workspace
 
 # Go into main repository Directory
-RUN cd zulip
+# RUN cd zulip
 # Conncet to remote upstream
 RUN git remote add -f upstream https://github.com/zulip/zulip.git
 
