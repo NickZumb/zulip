@@ -4,8 +4,14 @@ FROM ubuntu:20.04
 # Set the working directory
 WORKDIR /workspace
 
+# install git
+#RUN apt-get update
+#RUN apt-get upgrade -y
+RUN apt-get install -y git
+
 # Go into main repository Directory
-# RUN cd zulip
+WORKDIR /workspace/zulip
+
 # Conncet to remote upstream
 RUN git remote add -f upstream https://github.com/zulip/zulip.git
 
