@@ -9,6 +9,9 @@ RUN apt-get update
 RUN apt-get upgrade -y
 RUN apt-get install -y git
 
+# install  python
+RUN apt-get -y install python3
+
 # Go into main repository Directory
 WORKDIR /workspace/zulip
 
@@ -22,8 +25,9 @@ COPY ./tools/provision /tools/provision
 COPY ./tools/run-dev /tools/run-dev
 
 # Create non-root user to run scripts:
-RUN useradd Zulip_User
-USER Zulip_User
+RUN useradd zulipdev
+RUN usermod -aG sudo zulipdev
+USER zulipdev
 
 # Run Scripts
 RUN bash /tools/provision
