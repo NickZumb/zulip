@@ -21,12 +21,12 @@ RUN git init
 RUN git remote add -f upstream https://github.com/zulip/zulip.git
 
 # Copy files from reposity to Docker:
-COPY ./tools/provision /tools/provision
-COPY ./tools/run-dev /tools/run-dev
+COPY ./tools/provision ./tools/provision
+COPY ./tools/run-dev ./tools/run-dev
 
 # Make loging file
-RUN mkdir -p ../var/log
-RUN cat > ../var/log/provision.log
+#RUN mkdir -p ../var/log
+#RUN cat > ../var/log/provision.log
 
 # Create non-root user to run scripts:
 RUN adduser zulipdev
@@ -34,7 +34,7 @@ RUN usermod -aG sudo zulipdev
 USER zulipdev
 
 # Install/update the Zulip development environment
-#RUN bash /tools/provision
+RUN bash ./tools/provision
 # Enter the Zulip Python environment
 #RUN source /srv/zulip-py3-venv/bin/activate 
 # Start the development server
