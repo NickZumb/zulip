@@ -24,8 +24,12 @@ RUN git remote add -f upstream https://github.com/zulip/zulip.git
 COPY ./tools/provision /tools/provision
 COPY ./tools/run-dev /tools/run-dev
 
+# Make loging file
+RUN mkdir -p ../var/log
+RUN cat > ../var/log/provision.log
+
 # Create non-root user to run scripts:
-RUN useradd zulipdev
+RUN adduser zulipdev
 RUN usermod -aG sudo zulipdev
 USER zulipdev
 
