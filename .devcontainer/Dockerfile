@@ -34,9 +34,9 @@ RUN usermod -aG sudo zulipdev
 USER zulipdev
 
 # Install/update the Zulip development environment
-RUN bash ./tools/provision
+# RUN ./tools/provision
 # Enter the Zulip Python environment
 #RUN source /srv/zulip-py3-venv/bin/activate 
 # Start the development server
-#RUN bash /tools/run-dev  
+#RUN bash ./tools/run-dev --interface=''  
 
