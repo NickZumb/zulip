@@ -16,6 +16,6 @@
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "forwardPorts": [],
-  "postCreateCommand": ""
-  "remoteUser": "zulipdev"
+  "postCreateCommand": "",
+  "remoteUser": "root"
 }
