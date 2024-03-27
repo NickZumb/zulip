@@ -17,5 +17,5 @@
   },
   "forwardPorts": [],
   "postCreateCommand": ""
-  "remoteUser": "zulipUser"
+  "remoteUser": "zulipdev"
 }
