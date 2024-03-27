@@ -12,6 +12,9 @@ RUN apt-get install -y git
 # install  python
 RUN apt-get -y install python3
 
+# install sudo
+RUN apt-get install sudo
+
 # Go into main repository Directory
 WORKDIR /workspace/zulip
 
