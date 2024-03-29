@@ -755,6 +755,10 @@ export function process_hotkey(e, hotkey) {
                 scheduled_messages_overlay_ui.handle_keyboard_events(event_name);
                 return true;
             }
+            if (overlays.message_edit_history_open()) {
+                message_edit_history.handle_keyboard_events(event_name);
+                return true;
+            }
     }
 
     if (hotkey.message_view_only && overlays.any_active()) {
@@ -971,6 +975,18 @@ export function process_hotkey(e, hotkey) {
         case "all_messages":
             browser_history.go_to_location("#all_messages");
             return true;
+        case "toggle_topic_visibility_policy":
+            if (recent_view_ui.is_in_focus()) {
+                const recent_msg = recent_view_ui.get_focused_row_message();
+                if (recent_msg !== undefined && recent_msg.type === "stream") {
+                    user_topics_ui.toggle_topic_visibility_policy(recent_msg);
+                    return true;
+                }
+                return false;
+            }
+            if (inbox_ui.is_in_focus()) {
+                return inbox_ui.toggle_topic_visibility_policy();
+            }
     }
 
     // Shortcuts that are useful with an empty message feed, like opening compose.
@@ -1110,7 +1126,7 @@ export function process_hotkey(e, hotkey) {
             // Use canonical name.
             const thumbs_up_emoji_code = "1f44d";
             const canonical_name = emoji.get_emoji_name(thumbs_up_emoji_code);
-            reactions.toggle_emoji_reaction(msg.id, canonical_name);
+            reactions.toggle_emoji_reaction(msg, canonical_name);
             return true;
         }
         case "upvote_first_emoji": {
@@ -1127,7 +1143,7 @@ export function process_hotkey(e, hotkey) {
                 return true;
             }
 
-            reactions.toggle_emoji_reaction(msg.id, first_reaction.emoji_name);
+            reactions.toggle_emoji_reaction(msg, first_reaction.emoji_name);
             return true;
         }
         case "toggle_topic_visibility_policy":
@@ -1149,8 +1165,8 @@ export function process_hotkey(e, hotkey) {
         }
         case "view_edit_history": {
             if (realm.realm_allow_edit_history) {
-                message_edit_history.show_history(msg);
-                $("#message-history-cancel").trigger("focus");
+                message_edit_history.fetch_and_render_message_history(msg);
+                $("#message-history-overlay .exit-sign").trigger("focus");
                 return true;
             }
             return false;

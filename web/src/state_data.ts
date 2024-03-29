@@ -21,31 +21,51 @@ export const narrow_term_schema = z.object({
 export type NarrowTerm = z.output<typeof narrow_term_schema>;
 // Sync this with zerver.lib.events.do_events_register.
 
+const placement_schema = z.enum([
+    "top",
+    "left",
+    "right",
+    "bottom",
+    "left_bottom",
+    "viewport_center",
+]);
+
+export type Placement = z.infer<typeof placement_schema>;
+
 const hotspot_location_schema = z.object({
     element: z.string(),
     offset_x: z.number(),
     offset_y: z.number(),
-    popover: z.optional(z.string()),
+    popover: z.optional(placement_schema),
 });
 
-const hotspot_schema = z.object({
+export type HotspotLocation = z.output<typeof hotspot_location_schema>;
+
+const raw_hotspot_schema = z.object({
     delay: z.number(),
     description: z.string(),
     has_trigger: z.boolean(),
-    location: z.optional(hotspot_location_schema),
     name: z.string(),
     title: z.string(),
     type: z.literal("hotspot"),
 });
+
+export type RawHotspot = z.output<typeof raw_hotspot_schema>;
+
+const hotspot_schema = raw_hotspot_schema.extend({
+    location: hotspot_location_schema,
+});
+
+export type Hotspot = z.output<typeof hotspot_schema>;
 
 const one_time_notice_schema = z.object({
     name: z.string(),
     type: z.literal("one_time_notice"),
 });
 
-const onboarding_steps_schema = z.union([one_time_notice_schema, hotspot_schema]);
+const onboarding_step_schema = z.union([one_time_notice_schema, raw_hotspot_schema]);
 
-export type OnboardingSteps = z.output<typeof onboarding_steps_schema>;
+export type OnboardingStep = z.output<typeof onboarding_step_schema>;
 
 export const current_user_schema = z.object({
     avatar_source: z.string(),
@@ -55,7 +75,7 @@ export const current_user_schema = z.object({
     is_guest: z.boolean(),
     is_moderator: z.boolean(),
     is_owner: z.boolean(),
-    onboarding_steps: z.array(onboarding_steps_schema),
+    onboarding_steps: z.array(onboarding_step_schema),
     user_id: z.number(),
 });
 // Sync this with zerver.lib.events.do_events_register.
@@ -69,6 +89,7 @@ export const realm_schema = z.object({
             id: z.number(),
             name: z.string(),
             order: z.number(),
+            required: z.boolean(),
             type: z.number(),
         }),
     ),
@@ -85,8 +106,17 @@ export const realm_schema = z.object({
     max_avatar_file_size_mib: z.number(),
     max_icon_file_size_mib: z.number(),
     max_logo_file_size_mib: z.number(),
+    max_message_length: z.number(),
+    max_topic_length: z.number(),
     realm_add_custom_emoji_policy: z.number(),
     realm_allow_edit_history: z.boolean(),
+    realm_authentication_methods: z.record(
+        z.object({
+            enabled: z.boolean(),
+            available: z.boolean(),
+            unavailable_reason: z.optional(z.string()),
+        }),
+    ),
     realm_available_video_chat_providers: z.object({
         disabled: z.object({name: z.string(), id: z.number()}),
         jitsi_meet: z.object({name: z.string(), id: z.number()}),
@@ -100,8 +130,11 @@ export const realm_schema = z.object({
     realm_create_private_stream_policy: z.number(),
     realm_create_public_stream_policy: z.number(),
     realm_create_web_public_stream_policy: z.number(),
+    realm_default_code_block_language: z.string(),
+    realm_default_language: z.string(),
     realm_delete_own_message_policy: z.number(),
     realm_description: z.string(),
+    realm_disallow_disposable_email_addresses: z.boolean(),
     realm_domains: z.array(
         z.object({
             domain: z.string(),
@@ -110,17 +143,32 @@ export const realm_schema = z.object({
     ),
     realm_edit_topic_policy: z.number(),
     realm_email_changes_disabled: z.boolean(),
+    realm_emails_restricted_to_domains: z.boolean(),
     realm_enable_guest_user_indicator: z.boolean(),
     realm_enable_spectator_access: z.boolean(),
     realm_icon_source: z.string(),
     realm_icon_url: z.string(),
+    realm_incoming_webhook_bots: z.array(
+        z.object({
+            display_name: z.string(),
+            name: z.string(),
+            all_event_types: z.nullable(z.array(z.string())),
+            // We currently ignore the `config` field in these objects.
+        }),
+    ),
     realm_invite_to_realm_policy: z.number(),
     realm_invite_to_stream_policy: z.number(),
     realm_is_zephyr_mirror_realm: z.boolean(),
     realm_jitsi_server_url: z.nullable(z.string()),
     realm_logo_source: z.string(),
     realm_logo_url: z.string(),
+    realm_mandatory_topics: z.boolean(),
+    realm_message_content_edit_limit_seconds: z.number(),
+    realm_message_content_delete_limit_seconds: z.number(),
+    realm_message_retention_days: z.number(),
+    realm_move_messages_between_streams_limit_seconds: z.number(),
     realm_move_messages_between_streams_policy: z.number(),
+    realm_move_messages_within_stream_limit_seconds: z.number(),
     realm_name_changes_disabled: z.boolean(),
     realm_name: z.string(),
     realm_new_stream_announcements_stream_id: z.number(),
@@ -128,18 +176,23 @@ export const realm_schema = z.object({
     realm_night_logo_url: z.string(),
     realm_org_type: z.number(),
     realm_plan_type: z.number(),
+    realm_presence_disabled: z.boolean(),
     realm_private_message_policy: z.number(),
     realm_push_notifications_enabled: z.boolean(),
+    realm_signup_announcements_stream_id: z.number(),
     realm_upload_quota_mib: z.nullable(z.number()),
     realm_uri: z.string(),
     realm_user_group_edit_policy: z.number(),
     realm_video_chat_provider: z.number(),
     realm_waiting_period_threshold: z.number(),
+    realm_wildcard_mention_policy: z.number(),
+    realm_zulip_update_announcements_stream_id: z.number(),
     server_avatar_changes_disabled: z.boolean(),
     server_jitsi_server_url: z.nullable(z.string()),
     server_name_changes_disabled: z.boolean(),
     server_needs_upgrade: z.boolean(),
     server_presence_offline_threshold_seconds: z.number(),
+    server_presence_ping_interval_seconds: z.number(),
     server_supported_permission_settings: z.object({
         realm: z.record(group_permission_setting_schema),
         stream: z.record(group_permission_setting_schema),

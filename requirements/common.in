@@ -2,8 +2,12 @@
 # /tools/update-locked-requirements to update requirements/dev.txt
 # and requirements/prod.txt.
 # See requirements/README.md for more detail.
+
+-r pip.in
+
 # Django itself
 Django[argon2]==4.2.*
+asgiref<3.8.0  # Breaks with https://github.com/django/asgiref/pull/367
 
 # needed for NotRequired, ParamSpec
 typing-extensions
@@ -82,7 +86,7 @@ django-bmemcached
 python-dateutil
 
 # Needed for time zone work
-https://github.com/andersk/zoneinfo/archive/f9687abaea8453be1c8d0e21544bd557d65af933.zip#egg=backports.zoneinfo==0.2.1+git ; python_version < "3.9"  # https://github.com/pganssle/zoneinfo/pull/126
+https://github.com/zulip/zoneinfo/archive/f9687abaea8453be1c8d0e21544bd557d65af933.zip#egg=backports.zoneinfo==0.2.1+git ; python_version < "3.9"  # https://github.com/pganssle/zoneinfo/pull/126
 
 # Needed for Redis
 redis
@@ -94,7 +98,7 @@ tornado
 orjson
 
 # Needed for iOS push notifications
-https://github.com/zulip/aioapns/archive/2d69284481d328bd3e4168c631d75a38268eddb9.zip#egg=aioapns==3.1+git  # https://github.com/Fatal1ty/aioapns/pull/52
+aioapns
 
 python-twitter
 

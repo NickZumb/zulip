@@ -140,6 +140,9 @@
     */
     --stream-subscriber-list-max-height: 100%;
 
+    /* Gap between tabs in the tab picker */
+    --grid-gap-tab-picker: 2px;
+
     /* Colors used across the app */
     --color-date: hsl(0deg 0% 15% / 75%);
     --color-background-private-message-header: hsl(46deg 35% 93%);
@@ -195,9 +198,11 @@
     --color-background-tab-picker-selected-tab: hsl(0deg 0% 100%);
     --color-outline-tab-picker-tab-option: hsl(0deg 0% 0% / 30%);
     --color-background-tab-picker-tab-option-hover: hsl(0deg 0% 100% / 60%);
+    --color-background-tab-picker-tab-option-active: hsl(0deg 0% 100% / 35%);
     --color-background-popover: hsl(0deg 0% 100%);
     --color-background-alert-word: hsl(18deg 100% 84%);
     --color-buddy-list-highlighted-user: hsl(120deg 12.3% 71.4% / 38%);
+    --color-border-sidebar: hsl(0deg 0% 87%);
 
     /* Compose box colors */
     --color-compose-send-button-icon-color: hsl(0deg 0% 100%);
@@ -228,6 +233,7 @@
     --color-compose-embedded-button-background-hover: hsl(
         231deg 100% 90% / 50%
     );
+    --color-compose-chevron-arrow: hsl(0deg 0% 58%);
 
     /* Text colors */
     --color-text-default: hsl(0deg 0% 20%);
@@ -250,6 +256,7 @@
     --color-text-sidebar-popover-menu: hsl(0deg 0% 20%);
     --color-text-url: hsl(200deg 100% 40%);
     --color-text-url-hover: hsl(200deg 100% 25%);
+    --color-text-settings-field-hint: hsl(0deg 0% 57%);
 
     /* Markdown code colors */
     --color-markdown-code-text: hsl(0deg 0% 0%);
@@ -426,6 +433,17 @@
     /* Don't define light theme colors for modal here
        since the modal is also used on billing pages and
        this file is not imported on billing pages. */
+
+    /* Emoji-picker colors */
+    --color-background-emoji-picker-popover: hsl(0deg 0% 93%);
+    --color-background-emoji-picker-popover-tab-item-active: hsl(
+        0deg 0% 100% / 20%
+    );
+    --color-background-emoji-picker-emoji-focus: hsl(0deg 0% 93%);
+    --color-box-shadow-emoji-picker-emoji-focus: transparent;
+    --color-background-emoji-picker-emoji-reacted: hsl(195deg 50% 95%);
+    --color-border-emoji-picker-emoji-reacted: hsl(195deg 52% 79%);
+    --color-background-emoji-picker-emoji-reacted-focus: hsl(195deg 55% 88%);
 }
 
 %dark-theme {
@@ -486,8 +504,10 @@
     --color-background-tab-picker-selected-tab: hsl(0deg 0% 100% / 7%);
     --color-outline-tab-picker-tab-option: hsl(0deg 0% 100% / 12%);
     --color-background-tab-picker-tab-option-hover: hsl(0deg 0% 100% / 5%);
+    --color-background-tab-picker-tab-option-active: hsl(0deg 0% 100% / 3%);
     --color-background-alert-word: hsl(22deg 70% 35%);
     --color-buddy-list-highlighted-user: hsl(136deg 25% 73% / 20%);
+    --color-border-sidebar: hsl(0deg 0% 0% / 20%);
 
     /* Compose box colors */
     --color-compose-send-button-focus-shadow: hsl(0deg 0% 100% / 80%);
@@ -553,6 +573,7 @@
         hsl(0deg 0% 11%)
     );
     --color-text-url-hover: hsl(200deg 79% 66%);
+    --color-text-settings-field-hint: hsl(0deg 0% 52%);
 
     /* Markdown code colors */
     /* Note that Markdown code-link colors are identical
@@ -704,6 +725,17 @@
     --color-exit-button-border: hsl(0deg 0% 0% / 60%);
     --color-exit-button-background: hsl(211deg 29% 14%);
     --color-exit-button-background-interactive: hsl(211deg 29% 17%);
+
+    /* Emoji-picker colors */
+    --color-background-emoji-picker-popover: hsl(0deg 0% 0% / 20%);
+    --color-background-emoji-picker-popover-tab-item-active: hsl(
+        0deg 0% 0% / 50%
+    );
+    --color-background-emoji-picker-emoji-focus: hsl(212deg 28% 8% / 75%);
+    --color-box-shadow-emoji-picker-emoji-focus: hsl(0deg 0% 98%);
+    --color-background-emoji-picker-emoji-reacted: hsl(0deg 0% 0% / 50%);
+    --color-border-emoji-picker-emoji-reacted: hsl(0deg 0% 0% / 90%);
+    --color-background-emoji-picker-emoji-reacted-focus: hsl(0deg 0% 20% / 70%);
 }
 
 @media screen {

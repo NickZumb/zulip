@@ -46,7 +46,12 @@ type SelectedLinesSections = {
 
 export let compose_spinner_visible = false;
 export let shift_pressed = false; // true or false
+export let code_formatting_button_triggered = false; // true or false
 let full_size_status = false; // true or false
+
+export function set_code_formatting_button_triggered(value: boolean): void {
+    code_formatting_button_triggered = value;
+}
 
 // Some functions to handle the full size status explicitly
 export function set_full_size(is_full: boolean): void {
@@ -68,9 +73,15 @@ export function autosize_textarea($textarea: JQuery<HTMLTextAreaElement>): void 
 export function insert_and_scroll_into_view(
     content: string,
     $textarea: JQuery<HTMLTextAreaElement>,
+    replace_all = false,
 ): void {
-    insertTextIntoField($textarea[0], content);
-    // Blurring and refocusing ensures the cursor / selection is in view.
+    if (replace_all) {
+        setFieldText($textarea[0], content);
+    } else {
+        insertTextIntoField($textarea[0], content);
+    }
+    // Blurring and refocusing ensures the cursor / selection is in view
+    // in chromium browsers.
     $textarea.trigger("blur");
     $textarea.trigger("focus");
     autosize_textarea($textarea);
@@ -563,7 +574,7 @@ export function format_text(
             after_lines = "\n" + after_lines;
         }
         text = before_lines + selected_lines + after_lines;
-        setFieldText(field, text);
+        insert_and_scroll_into_view(text, $textarea, true);
         // If no text was selected, that is, marking was added to the line with the
         // cursor, nothing will be selected and the cursor will remain as it was.
         if (selected_text === "") {
@@ -579,7 +590,7 @@ export function format_text(
         }
     };
 
-    const format = (syntax_start: string, syntax_end = syntax_start): void => {
+    const format = (syntax_start: string, syntax_end = syntax_start): boolean => {
         let linebreak_start = "";
         let linebreak_end = "";
         if (syntax_start.startsWith("\n")) {
@@ -595,12 +606,12 @@ export function format_text(
                 text.slice(range.start, range.end) +
                 linebreak_end +
                 text.slice(range.end + syntax_end.length);
-            setFieldText(field, text);
+            insert_and_scroll_into_view(text, $textarea, true);
             field.setSelectionRange(
                 range.start - syntax_start.length,
                 range.end - syntax_start.length,
             );
-            return;
+            return false;
         } else if (is_inner_text_formatted(syntax_start, syntax_end)) {
             // Remove syntax inside the selection, if present.
             text =
@@ -609,16 +620,17 @@ export function format_text(
                 text.slice(range.start + syntax_start.length, range.end - syntax_end.length) +
                 linebreak_end +
                 text.slice(range.end);
-            setFieldText(field, text);
+            insert_and_scroll_into_view(text, $textarea, true);
             field.setSelectionRange(
                 range.start,
                 range.end - syntax_start.length - syntax_end.length,
             );
-            return;
+            return false;
         }
 
         // Otherwise, we don't have syntax within or around, so we add it.
         wrapFieldSelection(field, syntax_start, syntax_end);
+        return true;
     };
 
     const format_spoiler = (): void => {
@@ -638,7 +650,7 @@ export function format_text(
             if (text.startsWith("\n")) {
                 text = text.slice(1);
             }
-            setFieldText(field, text);
+            insert_and_scroll_into_view(text, $textarea, true);
             field.setSelectionRange(
                 range.start,
                 range.end - spoiler_syntax_start.length - spoiler_syntax_end.length,
@@ -658,7 +670,7 @@ export function format_text(
             if (text.startsWith("\n")) {
                 text = text.slice(1);
             }
-            setFieldText(field, text);
+            insert_and_scroll_into_view(text, $textarea, true);
             field.setSelectionRange(
                 range.start,
                 range.end - spoiler_syntax_start_without_break.length - spoiler_syntax_end.length,
@@ -672,7 +684,7 @@ export function format_text(
                 text.slice(0, range.start - spoiler_syntax_start_without_break.length) +
                 selected_text +
                 text.slice(range.end + spoiler_syntax_end.length);
-            setFieldText(field, text);
+            insert_and_scroll_into_view(text, $textarea, true);
             field.setSelectionRange(
                 range.start - spoiler_syntax_start_without_break.length,
                 range.end - spoiler_syntax_start_without_break.length,
@@ -686,7 +698,7 @@ export function format_text(
                 text.slice(0, range.start - spoiler_syntax_start.length) +
                 selected_text +
                 text.slice(range.end + spoiler_syntax_end.length);
-            setFieldText(field, text);
+            insert_and_scroll_into_view(text, $textarea, true);
             field.setSelectionRange(
                 range.start - spoiler_syntax_start.length,
                 range.end - spoiler_syntax_start.length,
@@ -716,7 +728,7 @@ export function format_text(
                 ) +
                 selected_text +
                 text.slice(range.end + spoiler_syntax_end.length);
-            setFieldText(field, text);
+            insert_and_scroll_into_view(text, $textarea, true);
             field.setSelectionRange(
                 new_selection_start,
                 range.end - spoiler_syntax_start_without_break.length,
@@ -740,7 +752,7 @@ export function format_text(
                 text.slice(0, range.start - spoiler_syntax_start_without_break.length) +
                 text.slice(new_range_start, new_range_end) +
                 text.slice(new_range_end + spoiler_syntax_end.length);
-            setFieldText(field, text);
+            insert_and_scroll_into_view(text, $textarea, true);
             field.setSelectionRange(
                 new_range_start - spoiler_syntax_start_without_break.length - (header ? 0 : 1),
                 new_range_end - spoiler_syntax_start_without_break.length - (header ? 0 : 1),
@@ -807,7 +819,7 @@ export function format_text(
                 space_between_description_and_url(description, url) +
                 url +
                 text.slice(range.end + 1);
-            setFieldText(field, text);
+            insert_and_scroll_into_view(text, $textarea, true);
             field.setSelectionRange(
                 range.start - 3 + space_between_description_and_url(description, url).length,
                 range.start -
@@ -840,7 +852,7 @@ export function format_text(
                 space_between_description_and_url(selected_text, url) +
                 url +
                 text.slice(text.indexOf(")", range.end) + 1);
-            setFieldText(field, text);
+            insert_and_scroll_into_view(text, $textarea, true);
             field.setSelectionRange(range.start - 1, range.end - 1);
             return;
         }
@@ -864,7 +876,7 @@ export function format_text(
                 space_between_description_and_url(description, url) +
                 url +
                 text.slice(range.end);
-            setFieldText(field, text);
+            insert_and_scroll_into_view(text, $textarea, true);
             field.setSelectionRange(
                 range.start,
                 range.start +
@@ -934,7 +946,7 @@ export function format_text(
                     text.slice(0, range.start - italic_syntax.length) +
                     text.slice(range.start, range.end) +
                     text.slice(range.end + italic_syntax.length);
-                setFieldText(field, text);
+                insert_and_scroll_into_view(text, $textarea, true);
                 field.setSelectionRange(
                     range.start - italic_syntax.length,
                     range.end - italic_syntax.length,
@@ -970,7 +982,7 @@ export function format_text(
                         range.end - italic_syntax.length,
                     ) +
                     text.slice(range.end);
-                setFieldText(field, text);
+                insert_and_scroll_into_view(text, $textarea, true);
                 field.setSelectionRange(range.start, range.end - italic_syntax.length * 2);
                 break;
             }
@@ -1004,7 +1016,15 @@ export function format_text(
                 if (range.end < text.length && text[range.end] !== "\n") {
                     block_code_syntax_end = block_code_syntax_end + "\n";
                 }
-                format(block_code_syntax_start, block_code_syntax_end);
+                const added_fence = format(block_code_syntax_start, block_code_syntax_end);
+                if (added_fence) {
+                    const cursor_after_opening_fence =
+                        range.start + block_code_syntax_start.length - 1;
+                    field.setSelectionRange(cursor_after_opening_fence, cursor_after_opening_fence);
+                    set_code_formatting_button_triggered(true);
+                    // Trigger typeahead lookup with a click.
+                    field.click();
+                }
             } else {
                 format(inline_code_syntax);
             }

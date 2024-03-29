@@ -20,6 +20,36 @@ format used by the Zulip server that they are interacting with.
 
 ## Changes in Zulip 9.0
 
+**Feature level 245**
+
+* [`PATCH
+  /realm/user_settings_defaults`](/api/update-realm-user-settings-defaults)
+  [`POST /register`](/api/register-queue), [`GET
+  /events`](/api/get-events), [`PATCH
+  /settings`](/api/update-settings): Added new `web_font_size_px` and
+  `web_line_height_percent` settings to allow users to control the
+  styling of the web application.
+
+**Feature level 244**
+
+* [`POST /register`](/api/register-queue), [`GET /events`](/api/get-events),
+  [`POST /realm/profile_fields`](/api/create-custom-profile-field),
+  [`GET /realm/profile_fields`](/api/get-custom-profile-fields): Added a new
+  parameter `required`, on custom profile field objects, indicating whether an
+  organization administrator has configured the field as something users should
+  be required to provide.
+
+**Feature level 243**
+
+* [`POST /register`](/api/register-queue), [`GET
+  /events`](/api/get-events): Changed the format of
+  `realm_authentication_methods` and `authentication_methods`,
+  respectively, to use a dictionary rather than a boolean as the value
+  for each authentication method. The new dictionaries are more
+  extensively and contain fields indicating whether the backend is
+  unavailable to the current realm due to Zulip Cloud plan
+  restrictions or any other reason.
+
 **Feature level 242**
 
 * [`POST /register`](/api/register-queue), [`POST /events`](/api/get-events),
@@ -193,9 +223,12 @@ No changes; feature level used for Zulip 8.0 release.
 **Feature level 224**
 
 * [`GET /events`](/api/get-events), [`GET /messages`](/api/get-messages),
-  [`GET /messages/{message_id}`](/api/get-message): The `wildcard_mentioned`
-  flag was deprecated, replaced with `stream_wildcard_mentioned` and
-  `topic_wildcard_mentioned`, but it is still available for backwards compatibility.
+  [`GET /messages/{message_id}`](/api/get-message): Of the [available
+  message flags](/api/update-message-flags#available-flags) that a user
+  may have for a message, the `wildcard_mentioned` flag was
+  deprecated in favor of the `stream_wildcard_mentioned` and
+  `topic_wildcard_mentioned` flags, but it is still available for
+  backwards compatibility.
 
 **Feature level 223**
 

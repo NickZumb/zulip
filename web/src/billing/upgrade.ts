@@ -2,6 +2,7 @@ import $ from "jquery";
 import {z} from "zod";
 
 import {localstorage} from "../localstorage";
+import * as portico_modals from "../portico/portico_modals";
 
 import * as helpers from "./helpers";
 import type {Prices} from "./helpers";
@@ -129,8 +130,19 @@ function restore_manual_license_count(): void {
 export const initialize = (): void => {
     restore_manual_license_count();
 
-    $("#org-upgrade-button").on("click", (e) => {
+    $("#org-upgrade-button, #confirm-send-invoice-modal .dialog_submit_button").on("click", (e) => {
         e.preventDefault();
+
+        if (page_params.setup_payment_by_invoice) {
+            if ($(e.currentTarget).parents("#confirm-send-invoice-modal").length === 0) {
+                // Open confirm send invoice model if not open.
+                portico_modals.open("confirm-send-invoice-modal");
+                return;
+            }
+
+            // Close modal so that we can show errors on the send invoice button.
+            portico_modals.close_active();
+        }
 
         // Clear the error box in case this is a repeat request.
         const $error_box = $("#autopay-error");
@@ -145,6 +157,11 @@ export const initialize = (): void => {
             [],
             "POST",
             (response) => {
+                if (page_params.setup_payment_by_invoice && !page_params.free_trial_days) {
+                    window.location.replace(`${page_params.billing_base_url}/upgrade/`);
+                    return;
+                }
+
                 const response_data = upgrade_response_schema.parse(response);
                 if (response_data.stripe_invoice_id) {
                     window.location.replace(
@@ -170,7 +187,7 @@ export const initialize = (): void => {
 
     update_due_today(selected_schedule);
     $("#payment-schedule-select").val(selected_schedule);
-    $<HTMLInputElement>("#payment-schedule-select").on("change", function () {
+    $<HTMLSelectElement>("select#payment-schedule-select").on("change", function () {
         selected_schedule = this.value;
         ls.set("selected_schedule", selected_schedule);
         update_due_today(selected_schedule);
@@ -178,7 +195,7 @@ export const initialize = (): void => {
 
     update_due_today_for_remote_server(remote_server_plan_start_date);
     $("#remote-server-plan-start-date-select").val(remote_server_plan_start_date);
-    $<HTMLInputElement>("#remote-server-plan-start-date-select").on("change", function () {
+    $<HTMLSelectElement>("select#remote-server-plan-start-date-select").on("change", function () {
         remote_server_plan_start_date = this.value;
         ls.set("remote_server_plan_start_date", remote_server_plan_start_date);
         update_due_today_for_remote_server(remote_server_plan_start_date);
@@ -191,12 +208,19 @@ export const initialize = (): void => {
         `Pay monthly ($${helpers.format_money(prices.monthly)}/user/month)`,
     );
 
-    $<HTMLInputElement>("#manual_license_count").on("keyup", function () {
+    $<HTMLInputElement>("input#manual_license_count").on("keyup", function () {
         const license_count = Number.parseInt(this.value, 10);
         update_license_count(license_count);
     });
 
     $("#upgrade-add-card-button").on("click", (e) => {
+        e.preventDefault();
+        if (e.currentTarget.classList.contains("update-billing-information-button")) {
+            const redirect_url = `${page_params.billing_base_url}/customer_portal/?manual_license_management=true&tier=${page_params.tier}&setup_payment_by_invoice=true`;
+            window.open(redirect_url, "_blank");
+            return;
+        }
+
         $("#upgrade-add-card-button #upgrade-add-card-button-text").hide();
         $("#upgrade-add-card-button .loader").show();
         helpers.create_ajax_request(
@@ -213,7 +237,6 @@ export const initialize = (): void => {
                 $("#upgrade-add-card-button #upgrade-add-card-button-text").show();
             },
         );
-        e.preventDefault();
     });
 };
 

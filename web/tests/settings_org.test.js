@@ -18,6 +18,7 @@ mock_esm("../src/loading", {
     make_indicator: noop,
     destroy_indicator: noop,
 });
+mock_esm("../src/scroll_util", {scroll_element_into_container: noop});
 
 const settings_config = zrequire("settings_config");
 const settings_bots = zrequire("settings_bots");
@@ -629,6 +630,13 @@ test("set_up", ({override, override_rewire}) => {
     $("#id_realm_create_web_public_stream_policy").set_parent(
         $.create("<stub-create-web-public-stream-policy-parent>"),
     );
+
+    override_rewire(settings_components, "get_input_element_value", (elem) => {
+        if ($(elem).data() === "number") {
+            return Number.parseInt($(elem).val(), 10);
+        }
+        return $(elem).val();
+    });
 
     // TEST set_up() here, but this mostly just allows us to
     // get access to the click handlers.

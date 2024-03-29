@@ -1,6 +1,7 @@
 import $ from "jquery";
 import _ from "lodash";
 
+import render_stream_creation_confirmation_banner from "../templates/modal_banner/stream_creation_confirmation_banner.hbs";
 import render_browse_streams_list from "../templates/stream_settings/browse_streams_list.hbs";
 import render_browse_streams_list_item from "../templates/stream_settings/browse_streams_list_item.hbs";
 import render_stream_settings from "../templates/stream_settings/stream_settings.hbs";
@@ -9,6 +10,7 @@ import render_stream_settings_overlay from "../templates/stream_settings/stream_
 import * as blueslip from "./blueslip";
 import * as browser_history from "./browser_history";
 import * as components from "./components";
+import * as compose_banner from "./compose_banner";
 import * as compose_recipient from "./compose_recipient";
 import * as compose_state from "./compose_state";
 import * as hash_parser from "./hash_parser";
@@ -152,6 +154,7 @@ export function update_stream_privacy(slim_sub, values) {
     stream_ui_updates.update_settings_button_for_sub(sub);
     stream_ui_updates.update_add_subscriptions_elements(sub);
     stream_ui_updates.enable_or_disable_subscribers_tab(sub);
+    stream_ui_updates.update_regular_sub_settings(sub);
     stream_list.redraw_stream_privacy(sub);
 
     const active_data = stream_settings_components.get_active_data();
@@ -231,6 +234,15 @@ export function add_sub_to_table(sub) {
         // ID isn't known yet.  These are appended to the top of the
         // list, so they are more visible.
         stream_ui_updates.row_for_stream_id(sub.stream_id).trigger("click");
+        const context = {
+            banner_type: compose_banner.SUCCESS,
+            classname: "stream_creation_confirmation",
+            stream_name: sub.name,
+            stream_url: hash_util.by_stream_url(sub.stream_id),
+        };
+        $("#stream_settings .stream-creation-confirmation-banner").html(
+            render_stream_creation_confirmation_banner(context),
+        );
         stream_create.reset_created_stream();
     }
     update_empty_left_panel_message();
@@ -457,7 +469,6 @@ export function redraw_left_panel(left_panel_params = get_left_panel_params()) {
             .get_content_element($("#streams_overlay_container .streams-list"))
             .append(widgets.get(stream_id));
     }
-    maybe_reset_right_panel();
     update_empty_left_panel_message();
 
     // return this for test convenience
@@ -477,14 +488,6 @@ export function get_left_panel_params() {
     return params;
 }
 
-export function maybe_reset_right_panel() {
-    if ($(".stream-row.active").hasClass("notdisplayed")) {
-        $(".right .settings").hide();
-        $(".nothing-selected").show();
-        $(".stream-row.active").removeClass("active");
-    }
-}
-
 // Make it explicit that our toggler is not created right away.
 export let toggler;
 
@@ -502,6 +505,9 @@ export function switch_stream_tab(tab_name) {
     }
 
     redraw_left_panel();
+    if ($(".stream-row.active").hasClass("notdisplayed")) {
+        stream_edit.empty_right_panel();
+    }
     stream_edit.setup_subscriptions_tab_hash(tab_name);
 }
 
@@ -699,7 +705,7 @@ function show_right_section() {
     resize.resize_stream_subscribers_list();
 }
 
-export function change_state(section, right_side_tab) {
+export function change_state(section, left_side_tab, right_side_tab) {
     // if in #streams/new form.
     if (section === "new") {
         do_open_create_stream();
@@ -718,6 +724,20 @@ export function change_state(section, right_side_tab) {
         const stream_id = Number.parseInt(section, 10);
         show_right_section();
         stream_edit_toggler.set_select_tab(right_side_tab);
+
+        if (left_side_tab === undefined) {
+            left_side_tab = "all-streams";
+            if (stream_data.is_subscribed(stream_id)) {
+                left_side_tab = "subscribed";
+            }
+        }
+
+        // Callback to .goto() will update browser_history unless a
+        // stream is being edited. We are always editing a stream here
+        // so its safe to call
+        if (left_side_tab !== toggler.value()) {
+            toggler.goto(left_side_tab);
+        }
         switch_to_stream_row(stream_id);
         return;
     }
@@ -726,7 +746,7 @@ export function change_state(section, right_side_tab) {
     stream_edit.empty_right_panel();
 }
 
-export function launch(section, right_side_tab) {
+export function launch(section, left_side_tab, right_side_tab) {
     setup_page(() => {
         overlays.open_overlay({
             name: "subscriptions",
@@ -736,7 +756,7 @@ export function launch(section, right_side_tab) {
                 $(".colorpicker").spectrum("destroy");
             },
         });
-        change_state(section, right_side_tab);
+        change_state(section, left_side_tab, right_side_tab);
     });
     if (!stream_settings_components.get_active_data().id) {
         if (section === "new") {

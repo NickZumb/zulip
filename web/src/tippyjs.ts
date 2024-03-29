@@ -3,11 +3,13 @@ import assert from "minimalistic-assert";
 import tippy, {delegate} from "tippy.js";
 
 import render_buddy_list_title_tooltip from "../templates/buddy_list/title_tooltip.hbs";
+import render_org_logo_tooltip from "../templates/org_logo_tooltip.hbs";
 import render_tooltip_templates from "../templates/tooltip_templates.hbs";
 
 import {$t} from "./i18n";
 import * as people from "./people";
 import * as popovers from "./popovers";
+import * as settings_config from "./settings_config";
 import * as ui_util from "./ui_util";
 import {user_settings} from "./user_settings";
 
@@ -243,7 +245,6 @@ export function initialize(): void {
     delegate("body", {
         target: [
             "#streams_header .streams-tooltip-target",
-            "#user_filter_icon",
             "#scroll-to-bottom-button-clickable-area",
             ".spectator_narrow_login_button",
             "#stream-specific-notify-table .unmute_stream",
@@ -573,6 +574,51 @@ export function initialize(): void {
             instance.setContent(
                 ui_util.parse_html(render_buddy_list_title_tooltip({total_user_count})),
             );
+        },
+    });
+
+    delegate("body", {
+        target: "#userlist-toggle",
+        delay: LONG_HOVER_DELAY,
+        placement: "bottom",
+        appendTo: () => document.body,
+        onShow(instance) {
+            let template = "show-userlist-tooltip-template";
+            if ($("#right-sidebar-container").is(":visible")) {
+                template = "hide-userlist-tooltip-template";
+            }
+            $(instance.reference).attr("data-tooltip-template-id", template);
+            instance.setContent(get_tooltip_content(instance.reference));
+        },
+        onHidden(instance) {
+            instance.destroy();
+        },
+    });
+
+    delegate("body", {
+        target: "#realm-logo",
+        placement: "right",
+        appendTo: () => document.body,
+        onShow(instance) {
+            const escape_navigates_to_home_view = user_settings.web_escape_navigates_to_home_view;
+            const home_view =
+                settings_config.web_home_view_values[user_settings.web_home_view].description;
+            instance.setContent(
+                ui_util.parse_html(
+                    render_org_logo_tooltip({home_view, escape_navigates_to_home_view}),
+                ),
+            );
+        },
+    });
+
+    delegate("body", {
+        target: ".custom-user-field-label-wrapper.required-field-wrapper",
+        content: $t({
+            defaultMessage: "This profile field is required.",
+        }),
+        appendTo: () => document.body,
+        onHidden(instance) {
+            instance.destroy();
         },
     });
 }

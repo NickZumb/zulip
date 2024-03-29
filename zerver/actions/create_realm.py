@@ -22,6 +22,7 @@ from zerver.lib.user_groups import (
     create_system_user_groups_for_realm,
     get_role_based_system_groups_dict,
 )
+from zerver.lib.zulip_update_announcements import get_latest_zulip_update_announcements_level
 from zerver.models import (
     DefaultStream,
     PreregistrationRealm,
@@ -34,7 +35,7 @@ from zerver.models import (
 )
 from zerver.models.realms import get_org_type_display_name, get_realm
 from zerver.models.users import get_system_bot
-from zproject.backends import all_implemented_backend_names
+from zproject.backends import all_default_backend_names
 
 if settings.CORPORATE_ENABLED:
     from corporate.lib.support import get_realm_support_url
@@ -261,11 +262,10 @@ def do_create_realm(
         create_system_user_groups_for_realm(realm)
         set_default_for_realm_permission_group_settings(realm)
 
-        # We create realms with all authentications methods enabled by default.
         RealmAuthenticationMethod.objects.bulk_create(
             [
                 RealmAuthenticationMethod(name=backend_name, realm=realm)
-                for backend_name in all_implemented_backend_names()
+                for backend_name in all_default_backend_names()
             ]
         )
 
@@ -295,11 +295,16 @@ def do_create_realm(
     )
     realm.signup_announcements_stream = signup_announcements_stream
 
+    # New realm is initialized with the latest zulip update announcements
+    # level as it shouldn't receive a bunch of old updates.
+    realm.zulip_update_announcements_level = get_latest_zulip_update_announcements_level()
+
     realm.save(
         update_fields=[
             "new_stream_announcements_stream",
             "signup_announcements_stream",
             "zulip_update_announcements_stream",
+            "zulip_update_announcements_level",
         ]
     )
 
@@ -320,13 +325,7 @@ def do_create_realm(
         support_url = get_realm_support_url(realm)
         organization_type = get_org_type_display_name(realm.org_type)
 
-        message = "[{name}]({support_link}) ([{subdomain}]({realm_link})). Organization type: {type}".format(
-            name=realm.name,
-            subdomain=realm.display_subdomain,
-            realm_link=realm.uri,
-            support_link=support_url,
-            type=organization_type,
-        )
+        message = f"[{realm.name}]({support_url}) ([{realm.display_subdomain}]({realm.uri})). Organization type: {organization_type}"
         topic_name = "new organizations"
 
         try:

@@ -311,7 +311,7 @@ elif (
         PASSWORD=get_secret("postgres_password"),
         HOST="localhost",
     )
-POSTGRESQL_MISSING_DICTIONARIES = bool(get_config("postgresql", "missing_dictionaries", None))
+POSTGRESQL_MISSING_DICTIONARIES = get_config("postgresql", "missing_dictionaries", False)
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
@@ -521,6 +521,14 @@ INTERNAL_BOT_DOMAIN = "zulip.com"
 CAMO_KEY = get_secret("camo_key") if CAMO_URI != "" else None
 
 ########################################################################
+# KATEX SERVER SETTINGS
+########################################################################
+
+KATEX_SERVER = get_config("application_server", "katex_server", False)
+KATEX_SERVER_PORT = get_config("application_server", "katex_server_port", "9700")
+
+
+########################################################################
 # STATIC CONTENT AND MINIFICATION SETTINGS
 ########################################################################
 
@@ -676,7 +684,7 @@ QUEUE_ERROR_DIR = zulip_path("/var/log/zulip/queue_error")
 QUEUE_STATS_DIR = zulip_path("/var/log/zulip/queue_stats")
 DIGEST_LOG_PATH = zulip_path("/var/log/zulip/digest.log")
 ANALYTICS_LOG_PATH = zulip_path("/var/log/zulip/analytics.log")
-ANALYTICS_LOCK_DIR = zulip_path("/home/zulip/deployments/analytics-lock-dir")
+ANALYTICS_LOCK_FILE = zulip_path("/home/zulip/deployments/analytics-lock.lock")
 WEBHOOK_LOG_PATH = zulip_path("/var/log/zulip/webhooks_errors.log")
 WEBHOOK_ANOMALOUS_PAYLOADS_LOG_PATH = zulip_path("/var/log/zulip/webhooks_anomalous_payloads.log")
 WEBHOOK_UNSUPPORTED_EVENTS_LOG_PATH = zulip_path("/var/log/zulip/webhooks_unsupported_events.log")

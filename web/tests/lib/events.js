@@ -138,6 +138,7 @@ exports.fixtures = {
                 field_data: "",
                 order: 1,
                 display_in_profile_summary: false,
+                required: false,
             },
             {
                 id: 2,
@@ -147,6 +148,7 @@ exports.fixtures = {
                 field_data: "",
                 order: 2,
                 display_in_profile_summary: false,
+                required: false,
             },
         ],
     },
@@ -389,7 +391,7 @@ exports.fixtures = {
             edit_topic_policy: 4,
             create_multiuse_invite_group: 3,
             authentication_methods: {
-                Google: true,
+                Google: {enabled: true, available: true},
             },
         },
     },

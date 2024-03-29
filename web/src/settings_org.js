@@ -388,18 +388,28 @@ function can_configure_auth_methods() {
     return false;
 }
 
-export function populate_auth_methods(auth_methods) {
+export function populate_auth_methods(auth_method_to_bool_map) {
     if (!meta.loaded) {
         return;
     }
     const $auth_methods_list = $("#id_realm_authentication_methods").expectOne();
-    auth_methods = settings_components.sort_object_by_key(auth_methods);
     let rendered_auth_method_rows = "";
-    for (const [auth_method, value] of Object.entries(auth_methods)) {
-        rendered_auth_method_rows += render_settings_admin_auth_methods_list({
+    for (const [auth_method, value] of Object.entries(auth_method_to_bool_map)) {
+        // Certain authentication methods are not available to be enabled without
+        // purchasing a plan, so we need to disable them in this UI.
+        // The restriction only applies to **enabling** the auth method, so this
+        // logic is dependent on the current value.
+        // The reason for that is that if for any reason, the auth method is already
+        // enabled (for example, because it was manually enabled for the organization
+        // by request, as an exception) - the organization should be able to disable it
+        // if they don't want it anymore.
+        const cant_be_enabled =
+            !realm.realm_authentication_methods[auth_method].available && !value;
+
+        const render_args = {
             method: auth_method,
             enabled: value,
-            disable_configure_auth_method: !can_configure_auth_methods(),
+            disable_configure_auth_method: !can_configure_auth_methods() || cant_be_enabled,
             // The negated character class regexp serves as an allowlist - the replace() will
             // remove *all* symbols *but* digits (\d) and lowecase letters (a-z),
             // so that we can make assumptions on this string elsewhere in the code.
@@ -407,7 +417,14 @@ export function populate_auth_methods(auth_methods) {
             // 1) It contains at least one allowed symbol
             // 2) No two auth method names are identical after this allowlist filtering
             prefix: "id_authmethod" + auth_method.toLowerCase().replaceAll(/[^\da-z]/g, "") + "_",
-        });
+        };
+
+        if (cant_be_enabled) {
+            render_args.unavailable_reason =
+                realm.realm_authentication_methods[auth_method].unavailable_reason;
+        }
+
+        rendered_auth_method_rows += render_settings_admin_auth_methods_list(render_args);
     }
     $auth_methods_list.html(rendered_auth_method_rows);
 }
@@ -472,7 +489,9 @@ export function discard_property_element_changes(elem, for_realm_default_setting
             settings_components.set_input_element_value($elem, property_value);
             break;
         case "realm_authentication_methods":
-            populate_auth_methods(property_value);
+            populate_auth_methods(
+                settings_components.realm_authentication_methods_to_boolean_dict(),
+            );
             break;
         case "realm_new_stream_announcements_stream_id":
         case "realm_signup_announcements_stream_id":
@@ -804,13 +823,13 @@ export function populate_data_for_request(subsection, for_realm_default_settings
         const $input_elem = $(input_elem);
         if (
             settings_components.check_property_changed(
-                $input_elem,
+                input_elem,
                 for_realm_default_settings,
                 sub,
                 group,
             )
         ) {
-            const input_value = settings_components.get_input_element_value($input_elem);
+            const input_value = settings_components.get_input_element_value(input_elem);
             if (input_value !== undefined) {
                 let property_name;
                 if (for_realm_default_settings || sub || group) {
@@ -967,7 +986,8 @@ export function build_page() {
     populate_realm_domains_label(realm.realm_domains);
 
     // Populate authentication methods table
-    populate_auth_methods(realm.realm_authentication_methods);
+
+    populate_auth_methods(settings_components.realm_authentication_methods_to_boolean_dict());
 
     for (const property_name of simple_dropdown_properties) {
         settings_components.set_property_dropdown_value(property_name);

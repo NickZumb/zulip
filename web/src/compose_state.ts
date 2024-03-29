@@ -49,10 +49,6 @@ export function has_recipient_viewed_topic_resolved_banner(): boolean {
     return recipient_viewed_topic_resolved_banner;
 }
 
-export function recipient_has_topics(): boolean {
-    return message_type !== "stream";
-}
-
 export function composing(): boolean {
     // This is very similar to get_message_type(), but it returns
     // a boolean.
@@ -87,7 +83,7 @@ function get_or_set(
 // integer -> stream id of the selected stream.
 // "direct" -> Direct message is selected.
 export let selected_recipient_id: number | "direct" | "" = "";
-export const DIRECT_MESSAGE_ID = "direct" as const;
+export const DIRECT_MESSAGE_ID = "direct";
 
 export function set_selected_recipient_id(recipient_id: number | "direct" | ""): void {
     selected_recipient_id = recipient_id;

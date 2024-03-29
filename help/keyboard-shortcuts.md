@@ -25,6 +25,10 @@ in the Zulip app to add more to your repertoire as needed.
 
 * **New direct message**: <kbd>X</kbd>
 
+* **Paste formatted text**: <kbd>Ctrl</kbd> + <kbd>V</kbd>
+
+* **Paste as plain text**: <kbd data-mac-following-key="⌥">Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd>
+
 * **Cancel compose and save draft**: <kbd>Esc</kbd> or <kbd>Ctrl</kbd> +
   <kbd>[</kbd> — Close the compose box and save the unsent message as a
   draft.
@@ -176,9 +180,10 @@ in the Zulip app to add more to your repertoire as needed.
 
 * **Collapse/show message**: <kbd>-</kbd>
 
-* **Toggle topic mute**: <kbd>Shift</kbd> + <kbd>M</kbd> — Muted topics
-  don't show up in any views (including **All messages**), and don't contribute
-  to unread counts. Read more about [muting or unmuting topics](/help/mute-a-topic).
+* **Toggle topic mute**: <kbd>Shift</kbd> + <kbd>M</kbd>. This works in both
+  message views and views that list topics (e.g., [inbox](/help/inbox), [recent
+  conversations](/help/recent-conversations)). Learn about [muted
+  topics](/help/mute-a-topic).
 
 ## Recent conversations
 

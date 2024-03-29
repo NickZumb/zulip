@@ -99,6 +99,7 @@ from zerver.views.push_notifications import (
     remove_android_reg_id,
     remove_apns_device_token,
     self_hosting_auth_json_endpoint,
+    self_hosting_auth_not_configured,
     self_hosting_auth_redirect_endpoint,
     send_test_push_notification_api,
 )
@@ -233,16 +234,12 @@ from zerver.views.video_calls import (
 )
 from zerver.views.zephyr import webathena_kerberos_login
 from zproject import dev_urls
-from zproject.legacy_urls import legacy_urls
 
 if settings.TWO_FACTOR_AUTHENTICATION_ENABLED:  # nocoverage
     from two_factor.gateways.twilio.urls import urlpatterns as tf_twilio_urls
     from two_factor.urls import urlpatterns as tf_urls
 
 # NB: There are several other pieces of code which route requests by URL:
-#
-#   - legacy_urls.py contains API endpoint written before the redesign
-#     and should not be added to.
 #
 #   - runtornado.py has its own URL list for Tornado views.  See the
 #     invocation of web.Application in that file.
@@ -828,6 +825,10 @@ urls += [
         self_hosting_auth_redirect_endpoint,
         name="self_hosting_auth_redirect_endpoint",
     ),
+    path(
+        "self-hosted-billing/not-configured/",
+        self_hosting_auth_not_configured,
+    ),
     rest_path(
         "json/self-hosted-billing",
         GET=self_hosting_auth_json_endpoint,
@@ -861,4 +862,4 @@ urls += [path("health", health)]
 # The sequence is important; if i18n URLs don't come first then
 # reverse URL mapping points to i18n URLs which causes the frontend
 # tests to fail
-urlpatterns = i18n_patterns(*i18n_urls) + urls + legacy_urls
+urlpatterns = i18n_patterns(*i18n_urls) + urls

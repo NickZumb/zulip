@@ -958,13 +958,14 @@ paths:
                                     in a new message that the server has already marked as read for
                                     the user.
 
-                                    **Changes**: In Zulip 8.0 (feature level 224), the `wildcard_mentioned` flag
-                                    was deprecated in favor of the `stream_wildcard_mentioned` and `topic_wildcard_mentioned`
-                                    flags. The `wildcard_mentioned` flag exists for backwards compatibility with
-                                    older clients and equals `stream_wildcard_mentioned` || `topic_wildcard_mentioned`.
-                                    Clients interacting with older servers should treat this field as an old name
-                                    for `stream_wildcard_mentioned`. @topic mentions were not available prior to
-                                    this feature level.
+                                    **Changes**: In Zulip 8.0 (feature level 224), the `wildcard_mentioned`
+                                    flag was deprecated in favor of the `stream_wildcard_mentioned` and
+                                    `topic_wildcard_mentioned` flags. The `wildcard_mentioned` flag exists
+                                    for backwards compatibility with older clients and equals
+                                    `stream_wildcard_mentioned || topic_wildcard_mentioned`. Clients
+                                    supporting older server versions should treat this field as a previous
+                                    name for the `stream_wildcard_mentioned` flag as topic wildcard mentions
+                                    were not available prior to this feature level.
 
                                     [message-flags]: /api/update-message-flags#available-flags
                                   items:
@@ -1912,6 +1913,7 @@ paths:
                                         "hint": "Enter your GitHub username",
                                         "field_data": '{"subtype":"github"}',
                                         "order": 8,
+                                        "required": true,
                                       },
                                     ],
                                   "id": 0,
@@ -2412,13 +2414,14 @@ paths:
                                     to identify cases where a mention or alert word was added by the
                                     edit.
 
-                                    **Changes**: In Zulip 8.0 (feature level 224), the `wildcard_mentioned` flag
-                                    was deprecated in favor of the `stream_wildcard_mentioned` and `topic_wildcard_mentioned`
-                                    flags. The `wildcard_mentioned` flag exists for backwards compatibility with
-                                    older clients and equals `stream_wildcard_mentioned` || `topic_wildcard_mentioned`.
-                                    Clients interacting with older servers should treat this field as an old name
-                                    for `stream_wildcard_mentioned`. @topic mentions were not available prior to
-                                    this feature level.
+                                    **Changes**: In Zulip 8.0 (feature level 224), the `wildcard_mentioned`
+                                    flag was deprecated in favor of the `stream_wildcard_mentioned` and
+                                    `topic_wildcard_mentioned` flags. The `wildcard_mentioned` flag exists
+                                    for backwards compatibility with older clients and equals
+                                    `stream_wildcard_mentioned || topic_wildcard_mentioned`. Clients
+                                    supporting older server versions should treat this field as a previous
+                                    name for the `stream_wildcard_mentioned` flag as topic wildcard mentions
+                                    were not available prior to this feature level.
 
                                     [message-flags]: /api/update-message-flags#available-flags
                                   items:
@@ -4172,19 +4175,21 @@ paths:
                                     authentication_methods:
                                       type: object
                                       additionalProperties:
-                                        description: |
-                                          Boolean describing whether the authentication method (i.e. its key)
-                                          is enabled in this organization.
-                                        type: boolean
+                                        $ref: "#/components/schemas/RealmAuthenticationMethod"
                                       description: |
-                                        Dictionary of authentication method keys with boolean values that
-                                        describe whether the named authentication method is enabled for the
+                                        Dictionary of authentication method keys mapped to dictionaries that
+                                        describe the properties of the named authentication method for the
+                                        organization - its enabled status and availability for use by the
                                         organization.
 
                                         Clients should use this to implement server-settings UI to change which
                                         methods are enabled for the organization. For authentication UI itself,
                                         clients should use the pre-authentication metadata returned by
                                         [`GET /server_settings`](/api/get-server-settings).
+
+                                        **Changes**: In Zulip 9.0 (feature level 243), the values in this
+                                        dictionary were changed. Previously, the values were a simple boolean
+                                        indicating whether the backend is enabled or not.
                                     bot_creation_policy:
                                       type: integer
                                       description: |
@@ -4485,7 +4490,7 @@ paths:
                                         Since these automated messages are sent by the server, this field is
                                         primarily relevant to clients containing UI for changing it.
 
-                                        [new-stream-announce]: /help/configure-notification-bot#new-stream-announcements
+                                        [new-stream-announce]: /help/configure-automated-notices#new-stream-announcements
 
                                         **Changes**: In Zulip 9.0 (feature level 241), renamed 'notifications_stream_id'
                                         to `new_stream_announcements_stream_id`.
@@ -4551,7 +4556,7 @@ paths:
                                         Since these automated messages are sent by the server, this field is
                                         primarily relevant to clients containing UI for changing it.
 
-                                        [new-user-announce]: /help/configure-notification-bot#new-user-announcements
+                                        [new-user-announce]: /help/configure-automated-notices#new-user-announcements
 
                                         **Changes**: In Zulip 9.0 (feature level 241), renamed
                                         'signup_notifications_stream_id' to `signup_announcements_stream_id`.
@@ -6316,13 +6321,14 @@ paths:
                                   description: |
                                     The user's [message flags][message-flags] for the message.
 
-                                    **Changes**: In Zulip 8.0 (feature level 224), the `wildcard_mentioned` flag
-                                    was deprecated in favor of the `stream_wildcard_mentioned` and `topic_wildcard_mentioned`
-                                    flags. The `wildcard_mentioned` flag exists for backwards compatibility with
-                                    older clients and equals `stream_wildcard_mentioned` || `topic_wildcard_mentioned`.
-                                    Clients interacting with older servers should treat this field as an old name
-                                    for `stream_wildcard_mentioned`. @topic mentions were not available prior to
-                                    this feature level.
+                                    **Changes**: In Zulip 8.0 (feature level 224), the `wildcard_mentioned`
+                                    flag was deprecated in favor of the `stream_wildcard_mentioned` and
+                                    `topic_wildcard_mentioned` flags. The `wildcard_mentioned` flag exists
+                                    for backwards compatibility with older clients and equals
+                                    `stream_wildcard_mentioned || topic_wildcard_mentioned`. Clients
+                                    supporting older server versions should treat this field as a previous
+                                    name for the `stream_wildcard_mentioned` flag as topic wildcard mentions
+                                    were not available prior to this feature level.
 
                                     [message-flags]: /api/update-message-flags#available-flags
                                   items:
@@ -6836,43 +6842,27 @@ paths:
                         </td>
                     </tr>
                     <tr>
-                        <td><code>wildcard_mentioned</code></td>
-                        <td>
-                            Whether this message contained either a
-                            <a href="/help/mention-a-user-or-group#mention-everyone-on-a-stream">stream wildcard mention</a>
-                            like @**all** or a topic wildcard mention (@**topic**). Cannot be changed
-                            by the user directly, but can change if the message is edited to add/remove
-                            a stream or/and topic wildcard mention.
-
-                            **Changes**: In Zulip 8.0 (feature level 224), the `wildcard_mentioned` flag
-                            was deprecated in favor of the `stream_wildcard_mentioned` and `topic_wildcard_mentioned`
-                            flags. The `wildcard_mentioned` flag exists for backwards compatibility with
-                            older clients and equals `stream_wildcard_mentioned` || `topic_wildcard_mentioned`.
-                            Clients interacting with older servers should treat this field as an old name
-                            for `stream_wildcard_mentioned`. @topic mentions were not available prior to
-                            this feature level.
-                        </td>
-                    </tr>
-                    <tr>
                         <td><code>stream_wildcard_mentioned</code></td>
                         <td>
                             Whether this message contained a
                             <a href="/help/mention-a-user-or-group#mention-everyone-on-a-stream">stream wildcard mention</a>
-                            like @**all**. Cannot be changed by the user directly, but
+                            (like @**all**). Cannot be changed by the user directly, but
                             can change if the message is edited to add/remove
                             a stream wildcard mention.
-
-                            **Changes**: New in Zulip 8.0 (feature level 224).
+                            <br /><br />
+                            <b>Changes</b>: New in Zulip 8.0 (feature level 224).
                         </td>
                     </tr>
                     <tr>
                         <td><code>topic_wildcard_mentioned</code></td>
                         <td>
-                            Whether this message contained a topic wildcard mention (@**topic**).
+                            Whether this message contained a
+                            <a href="/help/mention-a-user-or-group#mention-all-topic-participants">topic wildcard mention</a>
+                            (@**topic**).
                             Cannot be changed by the user directly, but can change if
                             the message is edited to add/remove a topic wildcard mention.
-
-                            **Changes**: New in Zulip 8.0 (feature level 224).
+                            <br /><br />
+                            <b>Changes</b>: New in Zulip 8.0 (feature level 224).
                         </td>
                     <tr>
                         <td><code>has_alert_word</code></td>
@@ -6887,12 +6877,34 @@ paths:
                     <tr>
                         <td><code>historical</code></td>
                         <td>
-                            Is `true` for messages that the user did not receive
+                            Is <code>true</code> for messages that the user did not receive
                             at the time they were sent but later was added to
-                            the user's history (E.g. because they starred or
+                            the user's history (e.g. because they starred or
                             reacted to a message sent to a public stream
                             before they subscribed to that stream). Cannot be
                             changed by the user directly.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>wildcard_mentioned</code></td>
+                        <td>
+                            Whether this message contained either a
+                            <a href="/help/mention-a-user-or-group#mention-everyone-on-a-stream">stream wildcard mention</a>
+                            (like @**all**) or a
+                            <a href="/help/mention-a-user-or-group#mention-all-topic-participants">topic wildcard mention</a>
+                            (@**topic**). Cannot be changed by the user directly, but can change if
+                            the message is edited to add/remove a stream and/or topic wildcard
+                            mention.
+                            <br /><br />
+                            <b>Changes</b>: Deprecated in Zulip 8.0 (feature level 224), in favor of
+                            the <code>stream_wildcard_mentioned</code> and
+                            <code>topic_wildcard_mentioned</code> flags. The
+                            <code>wildcard_mentioned</code> flag exists for backwards compatibility
+                            with older clients and equals
+                            <code>stream_wildcard_mentioned || topic_wildcard_mentioned</code>.
+                            Clients supporting older server versions should treat this field as a
+                            previous name for the <code>stream_wildcard_mentioned</code> flag as
+                            topic wildcard mentions were not available prior to this feature level.
                         </td>
                     </tr>
                 </tbody>
@@ -7595,13 +7607,14 @@ paths:
                                 description: |
                                   The user's [message flags][message-flags] for the message.
 
-                                  **Changes**: In Zulip 8.0 (feature level 224), the `wildcard_mentioned` flag
-                                  was deprecated in favor of the `stream_wildcard_mentioned` and `topic_wildcard_mentioned`
-                                  flags. The `wildcard_mentioned` flag exists for backwards compatibility with
-                                  older clients and equals `stream_wildcard_mentioned` || `topic_wildcard_mentioned`.
-                                  Clients interacting with older servers should treat this field as an old name
-                                  for `stream_wildcard_mentioned`. @topic mentions were not available prior to
-                                  this feature level.
+                                  **Changes**: In Zulip 8.0 (feature level 224), the `wildcard_mentioned`
+                                  flag was deprecated in favor of the `stream_wildcard_mentioned` and
+                                  `topic_wildcard_mentioned` flags. The `wildcard_mentioned` flag exists
+                                  for backwards compatibility with older clients and equals
+                                  `stream_wildcard_mentioned || topic_wildcard_mentioned`. Clients
+                                  supporting older server versions should treat this field as a previous
+                                  name for the `stream_wildcard_mentioned` flag as topic wildcard mentions
+                                  were not available prior to this feature level.
 
                                   [message-flags]: /api/update-message-flags#available-flags
                                 items:
@@ -9244,7 +9257,7 @@ paths:
                 announce:
                   description: |
                     If one of the streams specified did not exist previously and is thus created
-                    by this call, this determines whether [notification bot](/help/configure-notification-bot)
+                    by this call, this determines whether [notification bot](/help/configure-automated-notices)
                     will send an announcement about the new stream's creation.
                   type: boolean
                   default: false
@@ -10286,6 +10299,7 @@ paths:
                               "hint": "Enter your GitHub username",
                               "field_data": '{"subtype":"github"}',
                               "order": 8,
+                              "required": true,
                             },
                             {
                               "id": 9,
@@ -10410,6 +10424,18 @@ paths:
                     **Changes**: New in Zulip 6.0 (feature level 146).
                   type: boolean
                   example: true
+                required:
+                  description: |
+                    Whether an organization administrator has configured this profile field as
+                    required.
+
+                    Because the required property is mutable, clients cannot assume that a required
+                    custom profile field has a value. The Zulip web application displays a prominent
+                    banner to any user who has not set a value for a required field.
+
+                    **Changes**: New in Zulip 9.0 (feature level 244).
+                  type: boolean
+                  example: true
               required:
                 - field_type
             encoding:
@@ -10418,6 +10444,8 @@ paths:
               field_data:
                 contentType: application/json
               display_in_profile_summary:
+                contentType: application/json
+              required:
                 contentType: application/json
       responses:
         "200":
@@ -10521,6 +10549,25 @@ paths:
                     - 2
                     - 3
                   example: 1
+                web_font_size_px:
+                  description: |
+                    User-configured primary `font-size` for the web application, in pixels.
+
+                    **Changes**: New in Zulip 9.0 (feature level 245). Previously, font size was
+                    only adjustable via browser zoom. Note that this setting was not fully
+                    implemented at this feature level.
+                  type: integer
+                  example: 14
+                web_line_height_percent:
+                  description: |
+                    User-configured primary `line-height` for the web application, in percent, so a
+                    value of 120 represents a `line-height` of 1.2.
+
+                    **Changes**: New in Zulip 9.0 (feature level 245). Previously, line height was
+                    not user-configurable. Note that this setting was not fully implemented at this
+                    feature level.
+                  type: integer
+                  example: 122
                 color_scheme:
                   description: |
                     Controls which [color theme](/help/dark-theme) to use.
@@ -10924,6 +10971,10 @@ paths:
               high_contrast_mode:
                 contentType: application/json
               web_mark_read_on_scroll_policy:
+                contentType: application/json
+              web_font_size_px:
+                contentType: application/json
+              web_line_height_percent:
                 contentType: application/json
               color_scheme:
                 contentType: application/json
@@ -12963,6 +13014,25 @@ paths:
                             description: |
                               This setting is reserved for use to control variations in Zulip's design
                               to help visually impaired users.
+                          web_font_size_px:
+                            description: |
+                              User-configured primary `font-size` for the web application, in pixels.
+
+                              **Changes**: New in Zulip 9.0 (feature level 245). Previously, font size was
+                              only adjustable via browser zoom. Note that this setting was not fully
+                              implemented at this feature level.
+                            type: integer
+                            example: 14
+                          web_line_height_percent:
+                            description: |
+                              User-configured primary `line-height` for the web application, in percent, so a
+                              value of 120 represents a `line-height` of 1.2.
+
+                              **Changes**: New in Zulip 9.0 (feature level 245). Previously, line height was
+                              not user-configurable. Note that this setting was not fully implemented at this
+                              feature level.
+                            type: integer
+                            example: 122
                           color_scheme:
                             type: integer
                             description: |
@@ -14529,21 +14599,23 @@ paths:
                       realm_authentication_methods:
                         type: object
                         additionalProperties:
-                          description: |
-                            Boolean describing whether the authentication method (i.e. its key)
-                            is enabled in this organization.
-                          type: boolean
+                          $ref: "#/components/schemas/RealmAuthenticationMethod"
                         description: |
                           Present if `realm` is present in `fetch_event_types`.
 
-                          Dictionary of authentication method keys with boolean values that
-                          describe whether the named authentication method is enabled for the
+                          Dictionary of authentication method keys mapped to dictionaries that
+                          describe the properties of the named authentication method for the
+                          organization - its enabled status and availability for use by the
                           organization.
 
                           Clients should use this to implement server-settings UI to change which
                           methods are enabled for the organization. For authentication UI itself,
                           clients should use the pre-authentication metadata returned by
                           [`GET /server_settings`](/api/get-server-settings).
+
+                          **Changes**: In Zulip 9.0 (feature level 241), the values in this
+                          dictionary were changed. Previously, the values were a simple boolean
+                          indicating whether the backend is enabled or not.
                       realm_allow_message_editing:
                         type: boolean
                         description: |
@@ -15145,7 +15217,7 @@ paths:
                           Since these automated messages are sent by the server, this field is
                           primarily relevant to clients containing UI for changing it.
 
-                          [new-stream-announce]: /help/configure-notification-bot#new-stream-announcements
+                          [new-stream-announce]: /help/configure-automated-notices#new-stream-announcements
 
                           **Changes**: In Zulip 9.0 (feature level 241), renamed 'realm_notifications_stream_id'
                           to `realm_new_stream_announcements_stream_id`.
@@ -15162,7 +15234,7 @@ paths:
                           Since these automated messages are sent by the server, this field is
                           primarily relevant to clients containing UI for changing it.
 
-                          [new-user-announce]: /help/configure-notification-bot#new-user-announcements
+                          [new-user-announce]: /help/configure-automated-notices#new-user-announcements
 
                           **Changes**: In Zulip 9.0 (feature level 241), renamed
                           'realm_signup_notifications_stream_id' to `realm_signup_announcements_stream_id`.
@@ -15233,6 +15305,25 @@ paths:
                             description: |
                               This setting is reserved for use to control variations in Zulip's design
                               to help visually impaired users.
+                          web_font_size_px:
+                            description: |
+                              User-configured primary `font-size` for the web application, in pixels.
+
+                              **Changes**: New in Zulip 9.0 (feature level 245). Previously, font size was
+                              only adjustable via browser zoom. Note that this setting was not fully
+                              implemented at this feature level.
+                            type: integer
+                            example: 14
+                          web_line_height_percent:
+                            description: |
+                              User-configured primary `line-height` for the web application, in percent, so a
+                              value of 120 represents a `line-height` of 1.2.
+
+                              **Changes**: New in Zulip 9.0 (feature level 245). Previously, line height was
+                              not user-configurable. Note that this setting was not fully implemented at this
+                              feature level.
+                            type: integer
+                            example: 122
                           color_scheme:
                             type: integer
                             description: |
@@ -16307,6 +16398,25 @@ paths:
                     the `PATCH /settings/display` endpoint.
                   type: boolean
                   example: true
+                web_font_size_px:
+                  description: |
+                    User-configured primary `font-size` for the web application, in pixels.
+
+                    **Changes**: New in Zulip 9.0 (feature level 245). Previously, font size was
+                    only adjustable via browser zoom. Note that this setting was not fully
+                    implemented at this feature level.
+                  type: integer
+                  example: 14
+                web_line_height_percent:
+                  description: |
+                    User-configured primary `line-height` for the web application, in percent, so a
+                    value of 120 represents a `line-height` of 1.2.
+
+                    **Changes**: New in Zulip 9.0 (feature level 245). Previously, line height was
+                    not user-configurable. Note that this setting was not fully implemented at this
+                    feature level.
+                  type: integer
+                  example: 122
                 color_scheme:
                   description: |
                     Controls which [color theme](/help/dark-theme) to use.
@@ -16828,6 +16938,10 @@ paths:
               fluid_layout_width:
                 contentType: application/json
               high_contrast_mode:
+                contentType: application/json
+              web_font_size_px:
+                contentType: application/json
+              web_line_height_percent:
                 contentType: application/json
               color_scheme:
                 contentType: application/json
@@ -18932,6 +19046,17 @@ components:
             [profile field types](/help/custom-profile-fields#profile-field-types).
 
             **Changes**: New in Zulip 6.0 (feature level 146).
+        required:
+          type: boolean
+          description: |
+            Whether an organization administrator has configured this profile field as
+            required.
+
+            Because the required property is mutable, clients cannot assume that a required
+            custom profile field has a value. The Zulip web application displays a prominent
+            banner to any user who has not set a value for a required field.
+
+            **Changes**: New in Zulip 9.0 (feature level 244).
     OnboardingStep:
       type: object
       additionalProperties: false
@@ -18972,6 +19097,30 @@ components:
             only when some specific event occurs.
 
             **Changes**: New in Zulip 8.0 (feature level 230).
+    RealmAuthenticationMethod:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          description: |
+            Boolean describing whether the authentication method (i.e. its key)
+            is enabled in this organization.
+        available:
+          type: boolean
+          description: |
+            Boolean describing whether the authentication method is available for use.
+            If false, the organization is not eligible to enable the authentication
+            method.
+        unavailable_reason:
+          type: string
+          description: |
+            Reason why the authentication method is unavailable. This field is optional
+            and is only present when 'available' is false.
+      additionalProperties: false
+      description: |
+        Dictionary describing the properties of an authentication method for the
+        organization - its enabled status and availability for use by the
+        organization.
     RealmEmoji:
       type: object
       additionalProperties: false
