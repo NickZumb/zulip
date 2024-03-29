@@ -204,6 +204,8 @@ function format_user_group_list_item_html(group) {
     return render_user_group_list_item({
         group_id: group.id,
         name: group.name,
+        group_edit_url: hash_util.group_edit_url(group),
+        is_guest: current_user.is_guest,
     });
 }
 
@@ -285,6 +287,7 @@ export function get_custom_profile_field_data(user, field, field_types) {
     profile_field.is_external_account = field_type === field_types.EXTERNAL_ACCOUNT.id;
     profile_field.type = field_type;
     profile_field.display_in_profile_summary = field.display_in_profile_summary;
+    profile_field.required = field.required;
 
     switch (field_type) {
         case field_types.DATE.id:
@@ -479,6 +482,9 @@ export function show_user_profile(user, default_tab_key = "profile-tab") {
     const $elem = toggler.get();
     $elem.addClass("large allow-overflow");
     $("#tab-toggle").append($elem);
+    setTimeout(() => {
+        $(".ind-tab.selected").trigger("focus");
+    }, 0);
     if (show_user_subscribe_widget) {
         reset_subscribe_widget();
     }
@@ -950,6 +956,10 @@ export function initialize() {
     });
 
     $("body").on("click", "#user-profile-modal .stream_list_item", () => {
+        hide_user_profile();
+    });
+
+    $("body").on("click", "#user-profile-modal .group_list_item_link", () => {
         hide_user_profile();
     });
 

@@ -29,6 +29,7 @@ from zerver.lib.queue import queue_json_publish
 from zerver.lib.send_email import FromAddress, send_future_email
 from zerver.lib.soft_deactivation import soft_reactivate_if_personal_notification
 from zerver.lib.tex import change_katex_to_raw_latex
+from zerver.lib.timezone import canonicalize_timezone
 from zerver.lib.topic import get_topic_resolution_and_bare_name
 from zerver.lib.url_encoding import (
     huddle_narrow_url,
@@ -199,7 +200,7 @@ def build_message_list(
     messages_to_render: List[Dict[str, Any]] = []
 
     def sender_string(message: Message) -> str:
-        if message.recipient.type in (Recipient.STREAM, Recipient.HUDDLE):
+        if message.recipient.type in (Recipient.STREAM, Recipient.DIRECT_MESSAGE_GROUP):
             return message.sender.full_name
         else:
             return ""
@@ -262,7 +263,7 @@ def build_message_list(
             )
             header = f"You and {message.sender.full_name}"
             header_html = f"<a style='color: #ffffff;' href='{narrow_link}'>{header}</a>"
-        elif message.recipient.type == Recipient.HUDDLE:
+        elif message.recipient.type == Recipient.DIRECT_MESSAGE_GROUP:
             grouping = {"huddle": message.recipient_id}
             display_recipient = get_display_recipient(message.recipient)
             narrow_link = huddle_narrow_url(
@@ -469,7 +470,7 @@ def do_send_missedmessage_events_reply_in_zulip(
         reply_to_name = "Zulip"
 
     senders = list({m["message"].sender for m in missed_messages})
-    if missed_messages[0]["message"].recipient.type == Recipient.HUDDLE:
+    if missed_messages[0]["message"].recipient.type == Recipient.DIRECT_MESSAGE_GROUP:
         display_recipient = get_display_recipient(missed_messages[0]["message"].recipient)
         narrow_url = huddle_narrow_url(
             user=user_profile,
@@ -686,7 +687,9 @@ def get_onboarding_email_schedule(user: UserProfile) -> Dict[str, timedelta]:
     user_tz = user.timezone
     if user_tz == "":
         user_tz = "UTC"
-    signup_day = user.date_joined.astimezone(zoneinfo.ZoneInfo(user_tz)).isoweekday()
+    signup_day = user.date_joined.astimezone(
+        zoneinfo.ZoneInfo(canonicalize_timezone(user_tz))
+    ).isoweekday()
 
     # General rules for scheduling welcome emails flow:
     # -Do not send emails on Saturday or Sunday

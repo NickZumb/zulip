@@ -13,11 +13,13 @@ import * as unread_ui from "./unread_ui";
 
 let hide_scroll_to_bottom_timer;
 export function hide_scroll_to_bottom() {
+    const $show_scroll_to_bottom_button = $("#scroll-to-bottom-button-container");
     if (message_lists.current === undefined) {
+        // Scroll to bottom button is not for non-message views.
+        $show_scroll_to_bottom_button.removeClass("show");
         return;
     }
 
-    const $show_scroll_to_bottom_button = $("#scroll-to-bottom-button-container");
     if (
         message_viewport.bottom_rendered_message_visible() ||
         message_lists.current.visibly_empty()
@@ -172,6 +174,20 @@ export function initialize() {
                 message_lists.current === event.msg_list
             ) {
                 unread_ui.notify_messages_remain_unread();
+            }
+        }
+    });
+
+    const $show_scroll_to_bottom_button = $("#scroll-to-bottom-button-container").expectOne();
+    // Delete the tippy tooltip whenever the fadeout animation for
+    // this button is finished. This is necessary because the fading animation
+    // confuses Tippy's built-in `data-reference-hidden` feature.
+    $show_scroll_to_bottom_button.on("transitionend", (e) => {
+        if (e.originalEvent.propertyName === "visibility") {
+            const tooltip = $("#scroll-to-bottom-button-clickable-area")[0]._tippy;
+            // make sure the tooltip exists and the class is not currently showing
+            if (tooltip && !$show_scroll_to_bottom_button.hasClass("show")) {
+                tooltip.destroy();
             }
         }
     });

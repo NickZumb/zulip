@@ -141,6 +141,10 @@
     }
 }
 
+#invitee_emails_container .pill-container {
+    width: 100%;
+}
+
 .deactivated-pill {
     background-color: hsl(0deg 86% 86%) !important;
 }
@@ -153,6 +157,29 @@
     .input:first-child:empty::before {
         opacity: 0.5;
         content: attr(data-placeholder);
+    }
+}
+
+.panel_subscriber_member_list > .pill-container {
+    background-color: hsl(0deg 0% 0% / 7%);
+
+    &:hover {
+        color: inherit;
+    }
+
+    > .pill {
+        background-color: transparent;
+        border: none;
+        text-decoration: none;
+
+        &:focus {
+            color: inherit;
+        }
+
+        > .pill-value {
+            padding: 5px;
+            max-width: 165px;
+        }
     }
 }
 

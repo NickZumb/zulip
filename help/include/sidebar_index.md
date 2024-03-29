@@ -116,6 +116,7 @@
 * [Read receipts](/help/read-receipts)
 
 ## People
+* [User list](/help/user-list)
 * [Status and availability](/help/status-and-availability)
 * [User cards](/help/user-cards)
 * [View someone's profile](/help/view-someones-profile)
@@ -127,6 +128,7 @@
 * [Browse and subscribe to streams](/help/browse-and-subscribe-to-streams)
 * [Unsubscribe from a stream](/help/unsubscribe-from-a-stream)
 * [Create a stream](/help/create-a-stream)
+* [View stream subscribers](/help/view-stream-subscribers)
 * [Add or remove users from a stream](/help/add-or-remove-users-from-a-stream)
 * [Pin a stream](/help/pin-a-stream)
 * [Change the color of a stream](/help/change-the-color-of-a-stream)
@@ -224,7 +226,7 @@
 * [Message retention policy](/help/message-retention-policy)
 * [Weekly digest emails](/help/digest-emails)
 * [Disable welcome emails](/help/disable-welcome-emails)
-* [Configure notification bot](/help/configure-notification-bot)
+* [Configure automated notices](/help/configure-automated-notices)
 * [Configure multi-language search](/help/configure-multi-language-search)
 
 ## Bots & integrations

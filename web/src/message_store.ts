@@ -1,5 +1,6 @@
 import * as blueslip from "./blueslip";
 import * as people from "./people";
+import type {RawReaction} from "./reactions";
 import type {Submessage, TopicLink} from "./types";
 
 const stored_messages = new Map();
@@ -85,6 +86,7 @@ export type MessageWithBooleans = (
     stream_wildcard_mentioned: boolean;
     topic_wildcard_mentioned: boolean;
     collapsed: boolean;
+    condensed?: boolean;
     alerted: boolean;
 };
 
@@ -106,6 +108,8 @@ export type Message = (
     | Omit<MessageWithBooleans & {type: "private"}, "reactions">
     | Omit<MessageWithBooleans & {type: "stream"}, "reactions">
 ) & {
+    // Replaced by `clean_reactions` in `reactions.set_clean_reactions`.
+    reactions?: RawReaction[];
     // Added in `reactions.set_clean_reactions`.
     clean_reactions: Map<string, MessageCleanReaction>;
 

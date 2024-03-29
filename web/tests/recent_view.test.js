@@ -88,7 +88,7 @@ const ListWidget = mock_esm("../src/list_widget", {
 
 mock_esm("../src/compose_closed_ui", {
     set_standard_text_for_reply_button: noop,
-    update_buttons_for_non_stream_views: noop,
+    update_buttons_for_non_specific_views: noop,
 });
 mock_esm("../src/hash_util", {
     by_stream_url: test_url,
@@ -1120,22 +1120,24 @@ test("test_search", () => {
     assert.equal(rt.topic_in_search_results("recent", "general", "Recent topic"), true);
     assert.equal(rt.topic_in_search_results("RECENT", "general", "Recent topic"), true);
 
-    // match in any order of words
+    // Match (by prefix) in any order of words.
     assert.equal(rt.topic_in_search_results("topic recent", "general", "Recent topic"), true);
-
-    // Matches any sequence of words.
-    assert.equal(rt.topic_in_search_results("o", "general", "Recent topic"), true);
-    assert.equal(rt.topic_in_search_results("nt to", "general", "Recent topic"), true);
-    assert.equal(rt.topic_in_search_results("z", "general", "Recent topic"), false);
+    assert.equal(rt.topic_in_search_results("o", "general", "Recent topic"), false);
+    assert.equal(rt.topic_in_search_results("to recen", "general", "Recent topic"), true);
+    assert.equal(rt.topic_in_search_results("ner opic", "general", "Recent topic"), false);
+    assert.equal(rt.topic_in_search_results("pr pro", "general", "pro PRs"), true);
+    assert.equal(rt.topic_in_search_results("pr pro pr pro", "general", "pro PRs"), false);
+    assert.equal(rt.topic_in_search_results("co cows", "general", "one cow 2 cows"), true);
+    assert.equal(rt.topic_in_search_results("cows cows", "general", "one cow 2 cows"), false);
 
     assert.equal(rt.topic_in_search_results("?", "general", "Recent topic"), false);
 
     // Test special character match
     assert.equal(rt.topic_in_search_results(".*+?^${}()[]\\", "general", "Recent topic"), false);
-    assert.equal(rt.topic_in_search_results("?", "general", "not-at-start?"), true);
+    assert.equal(rt.topic_in_search_results("?", "general", "?at-start"), true);
 
     assert.equal(rt.topic_in_search_results("?", "general", "?"), true);
-    assert.equal(rt.topic_in_search_results("?", "general", "\\?"), true);
+    assert.equal(rt.topic_in_search_results("?", "general", "\\?"), false);
 
     assert.equal(rt.topic_in_search_results("\\", "general", "\\"), true);
     assert.equal(rt.topic_in_search_results("\\", "general", "\\\\"), true);

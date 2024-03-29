@@ -87,10 +87,8 @@ export function save_narrow(terms) {
 }
 
 export function activate(raw_terms, opts) {
-    /* Main entry point for switching to a new view / message list.
-       Note that for historical reasons related to the current
-       client-side caching structure, the "All messages"/message_lists.home
-       view is reached via `narrow.deactivate()`.
+    /* Main entry point for switching to a new view / message list
+       (including all messages and home views).
 
        The name is based on "narrowing to a subset of the user's
        messages.".  Supported parameters:
@@ -157,6 +155,8 @@ export function activate(raw_terms, opts) {
     if (
         page_params.is_spectator &&
         raw_terms.length &&
+        // Allow spectator to access all messages view.
+        !filter.is_in_home() &&
         raw_terms.some(
             (raw_term) => !hash_parser.allowed_web_public_narrows.includes(raw_term.operator),
         )
@@ -1072,7 +1072,7 @@ function handle_post_view_change(msg_list) {
     } else if (filter.is_conversation_view() || filter.includes_full_stream_history()) {
         compose_closed_ui.update_buttons_for_stream_views();
     } else {
-        compose_closed_ui.update_buttons_for_non_stream_views();
+        compose_closed_ui.update_buttons_for_non_specific_views();
     }
     compose_closed_ui.update_reply_recipient_label();
 

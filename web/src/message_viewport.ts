@@ -185,13 +185,13 @@ function add_to_visible<T>(
     top_of_feed: number,
     bottom_of_feed: number,
     require_fully_visible: boolean,
-    row_to_id: ($row: HTMLElement) => T,
+    row_to_output: ($row: HTMLElement) => T,
 ): void {
     for (const row of $candidates) {
         const row_rect = row.getBoundingClientRect();
         // Mark very tall messages as read once we've gotten past them
         if (in_viewport_or_tall(row_rect, top_of_feed, bottom_of_feed, require_fully_visible)) {
-            visible.push(row_to_id(row));
+            visible.push(row_to_output(row));
         } else {
             break;
         }
@@ -297,7 +297,7 @@ export function visible_messages(require_fully_visible: boolean): Message[] {
 
     function row_to_id(row: HTMLElement): Message {
         assert(message_lists.current !== undefined);
-        return message_lists.current.get(rows.id($(row))!)!;
+        return message_lists.current.get(rows.id($(row)))!;
     }
 
     // Being simplistic about this, the smallest message is 25 px high.
@@ -512,7 +512,7 @@ export function keep_pointer_in_view(): void {
         adjust(message_is_far_enough_up, rows.prev_visible);
     }
 
-    message_lists.current.select_id(rows.id($next_row)!, {from_scroll: true});
+    message_lists.current.select_id(rows.id($next_row), {from_scroll: true});
 }
 
 export function scroll_to_selected(): void {

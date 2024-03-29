@@ -2,6 +2,7 @@ import $ from "jquery";
 import _ from "lodash";
 import {delegate} from "tippy.js";
 
+import render_drafts_tooltip from "../templates/drafts_tooltip.hbs";
 import render_narrow_to_compose_recipients_tooltip from "../templates/narrow_to_compose_recipients_tooltip.hbs";
 
 import * as compose_recipient from "./compose_recipient";
@@ -19,9 +20,8 @@ export function initialize() {
         target: [
             // Ideally this would be `#compose_buttons .button`, but the
             // reply button's actual area is its containing span.
-            "#compose_buttons .compose_reply_button",
+            "#compose_buttons .compose-reply-button-wrapper",
             "#left_bar_compose_mobile_button_big",
-            "#new_conversation_button",
             "#new_direct_message_button",
         ],
         delay: EXTRA_LONG_HOVER_DELAY,
@@ -30,6 +30,39 @@ export function initialize() {
         // trigger after it closes, which results in tooltip being displayed.
         trigger: "mouseenter",
         appendTo: () => document.body,
+        onHidden(instance) {
+            instance.destroy();
+        },
+    });
+
+    delegate("body", {
+        target: "#new_conversation_button",
+        delay: EXTRA_LONG_HOVER_DELAY,
+        // Only show on mouseenter since for spectators, clicking on these
+        // buttons opens login modal, and Micromodal returns focus to the
+        // trigger after it closes, which results in tooltip being displayed.
+        trigger: "mouseenter",
+        appendTo: () => document.body,
+        onShow(instance) {
+            const $elem = $(instance.reference);
+            const conversation_type = $elem.attr("data-conversation-type");
+            if (conversation_type === "direct") {
+                instance.setContent(
+                    parse_html($("#new_direct_message_button_tooltip_template").html()),
+                );
+                return;
+            } else if (conversation_type === "stream") {
+                instance.setContent(
+                    parse_html($("#new_topic_message_button_tooltip_template").html()),
+                );
+                return;
+            }
+            // Use new_stream_message_button_tooltip_template when the
+            // conversation_type is equal to "non-specific" and also as a default fallback.
+            instance.setContent(
+                parse_html($("#new_stream_message_button_tooltip_template").html()),
+            );
+        },
         onHidden(instance) {
             instance.destroy();
         },
@@ -72,10 +105,23 @@ export function initialize() {
         target: ".send-control-button",
         delay: LONG_HOVER_DELAY,
         placement: "top",
-        onShow() {
+        onShow(instance) {
             // Don't show send-area tooltips if the popover is displayed.
             if (popover_menus.is_scheduled_messages_popover_displayed()) {
                 return false;
+            }
+            if (instance.reference.id === "compose-drafts-button") {
+                const count =
+                    instance.reference.querySelector(".compose-drafts-count").textContent || 0;
+                // Explain that the number in brackets is the number of drafts for this conversation.
+                const draft_count_msg = $t(
+                    {
+                        defaultMessage:
+                            "{count, plural, one {# draft} other {# drafts}} for this conversation",
+                    },
+                    {count},
+                );
+                instance.setContent(parse_html(render_drafts_tooltip({draft_count_msg})));
             }
             return true;
         },

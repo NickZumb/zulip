@@ -505,6 +505,7 @@ def write_instrumentation_reports(full_suite: bool, include_webhooks: bool) -> N
             "config-error/(?P<error_name>[^/]+)",
             "confirmation_key/",
             "node-coverage/(?P<path>.+)",
+            "docs/",
             "docs/(?P<path>.+)",
             "casper/(?P<path>.+)",
             "static/(?P<path>.+)",
@@ -525,9 +526,9 @@ def write_instrumentation_reports(full_suite: bool, include_webhooks: bool) -> N
             "scim/v2/ServiceProviderConfig",
             "scim/v2/Groups(?:/(?P<uuid>[^/]+))?",
             "scim/v2/Groups/.search",
-            # TODO: This endpoint and the rest of its system are a work in progress,
-            # we are not testing it yet.
-            "self-hosted-billing/",
+            # This endpoint only returns 500 and 404 codes, so it doesn't get picked up
+            # by find_pattern above and therefore needs to be exempt.
+            "self-hosted-billing/not-configured/",
             *(webhook.url for webhook in WEBHOOK_INTEGRATIONS if not include_webhooks),
         }
 
@@ -615,7 +616,7 @@ def use_db_models(
         Recipient = apps.get_model("zerver", "Recipient")
         Recipient.PERSONAL = 1
         Recipient.STREAM = 2
-        Recipient.HUDDLE = 3
+        Recipient.DIRECT_MESSAGE_GROUP = 3
         ScheduledEmail = apps.get_model("zerver", "ScheduledEmail")
         ScheduledMessage = apps.get_model("zerver", "ScheduledMessage")
         Service = apps.get_model("zerver", "Service")

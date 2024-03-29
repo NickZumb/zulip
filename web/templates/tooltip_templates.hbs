@@ -6,10 +6,6 @@
     {{t 'View bot card' }}
     {{tooltip_hotkey_hints "U"}}
 </template>
-<template id="compose_draft_tooltip_template">
-    {{t 'Drafts' }}
-    {{tooltip_hotkey_hints "D"}}
-</template>
 <template id="scroll-to-bottom-button-tooltip-template">
     {{t 'Scroll to bottom' }}
     {{tooltip_hotkey_hints "End"}}
@@ -88,6 +84,12 @@
 <template id="help-menu-tooltip-template">
     {{t 'Help menu' }}
     {{tooltip_hotkey_hints "G" "←"}}
+</template>
+<template id="automatic-theme-template">
+    <div>
+        <div>{{t "Automatic theme" }}</div>
+        <div class="tooltip-inner-content italic">{{t "Follows system settings." }}</div>
+    </div>
 </template>
 <template id="all-message-tooltip-template">
     <div class="views-tooltip-container" data-view-code="all_messages">
@@ -172,9 +174,12 @@
     {{t 'View streams' }}
     {{tooltip_hotkey_hints "Q"}}
 </template>
-<template id="userlist-tooltip-template">
-    {{t 'User list' }}
+<template id="show-userlist-tooltip-template">
+    {{t 'Show user list' }}
     {{tooltip_hotkey_hints "W"}}
+</template>
+<template id="hide-userlist-tooltip-template">
+    {{t 'Hide user list' }}
 </template>
 <template id="topic-unmute-tooltip-template">
     {{t "Unmute topic" }}
@@ -183,10 +188,6 @@
 <template id="topic-mute-tooltip-template">
     {{t "Mute topic" }}
     {{tooltip_hotkey_hints "Shift" "M"}}
-</template>
-<template id="search-people-tooltip-template">
-    {{t 'Search people' }}
-    {{tooltip_hotkey_hints "W"}}
 </template>
 <template id="restore-scheduled-message-tooltip-template">
     {{t 'Edit and reschedule message' }}

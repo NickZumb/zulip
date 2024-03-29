@@ -7,7 +7,7 @@ class zulip::app_frontend_base {
   include zulip::tornado_sharding
   include zulip::hooks::base
 
-  if $::os['family'] == 'Debian' {
+  if $facts['os']['family'] == 'Debian' {
     # Upgrade and other tooling wants to be able to get a database
     # shell.  This is not necessary on CentOS because the PostgreSQL
     # package already includes the client.
@@ -176,6 +176,9 @@ class zulip::app_frontend_base {
   if ($proxy_host in ['localhost', '127.0.0.1', '::1']) and ($proxy_port == '4750') {
     include zulip::smokescreen
   }
+
+  $katex_server = zulipconf('application_server', 'katex_server', false)
+  $katex_server_port = zulipconf('application_server', 'katex_server_port', '9700')
 
   if $proxy_host != '' and $proxy_port != '' {
     $proxy = "http://${proxy_host}:${proxy_port}"

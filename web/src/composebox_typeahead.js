@@ -4,6 +4,7 @@ import _ from "lodash";
 import * as typeahead from "../shared/src/typeahead";
 import render_topic_typeahead_hint from "../templates/topic_typeahead_hint.hbs";
 
+import * as bootstrap_typeahead from "./bootstrap_typeahead";
 import * as bulleted_numbered_list_util from "./bulleted_numbered_list_util";
 import * as compose_pm_pill from "./compose_pm_pill";
 import * as compose_state from "./compose_state";
@@ -90,14 +91,14 @@ function get_language_matcher(query) {
 
 export function query_matches_person(query, person) {
     return (
-        typeahead.query_matches_string(query, person.full_name, " ") ||
+        typeahead.query_matches_string_in_order(query, person.full_name, " ") ||
         (Boolean(person.delivery_email) &&
-            typeahead.query_matches_string(query, people.get_visible_email(person), " "))
+            typeahead.query_matches_string_in_order(query, people.get_visible_email(person), " "))
     );
 }
 
 export function query_matches_name(query, user_group_or_stream) {
-    return typeahead.query_matches_string(query, user_group_or_stream.name, " ");
+    return typeahead.query_matches_string_in_order(query, user_group_or_stream.name, " ");
 }
 
 function get_stream_or_user_group_matcher(query) {
@@ -114,8 +115,8 @@ function get_slash_matcher(query) {
 
     return function (item) {
         return (
-            typeahead.query_matches_string(query, item.name, " ") ||
-            typeahead.query_matches_string(query, item.aliases, " ")
+            typeahead.query_matches_string_in_order(query, item.name, " ") ||
+            typeahead.query_matches_string_in_order(query, item.aliases, " ")
         );
     };
 }
@@ -128,7 +129,7 @@ function get_topic_matcher(query) {
             topic,
         };
 
-        return typeahead.query_matches_string(query, obj.topic, " ");
+        return typeahead.query_matches_string_in_order(query, obj.topic, " ");
     };
 }
 
@@ -654,6 +655,17 @@ export function filter_and_sort_candidates(completing, candidates, token) {
     return sorted_results;
 }
 
+const ALLOWED_MARKDOWN_FEATURES = {
+    mention: true,
+    emoji: true,
+    silent_mention: true,
+    slash: true,
+    stream: true,
+    syntax: true,
+    topic: true,
+    timestamp: true,
+};
+
 export function get_candidates(query) {
     const split = split_at_cursor(query, this.$element);
     let current_token = tokenize_compose_str(split[0]);
@@ -675,15 +687,17 @@ export function get_candidates(query) {
 
     // Start syntax highlighting autocompleter if the first three characters are ```
     const syntax_token = current_token.slice(0, 3);
-    if (this.options.completions.syntax && (syntax_token === "```" || syntax_token === "~~~")) {
+    if (ALLOWED_MARKDOWN_FEATURES.syntax && (syntax_token === "```" || syntax_token === "~~~")) {
         // Only autocomplete if user starts typing a language after ```
-        if (current_token.length === 3) {
+        // unless the fence was added via the code formatting button.
+        if (current_token.length === 3 && !compose_ui.code_formatting_button_triggered) {
             return false;
         }
 
         // If the only input is a space, don't autocomplete
         current_token = current_token.slice(3);
         if (current_token === " ") {
+            compose_ui.set_code_formatting_button_triggered(false);
             return false;
         }
 
@@ -693,12 +707,18 @@ export function get_candidates(query) {
         }
         this.completing = "syntax";
         this.token = current_token;
-        return realm_playground.get_pygments_typeahead_list_for_composebox();
+        // If the code formatting button was triggered, we want to show a blank option
+        // to improve the discoverability of the possibility of specifying a language.
+        const language_list = compose_ui.code_formatting_button_triggered
+            ? ["", ...realm_playground.get_pygments_typeahead_list_for_composebox()]
+            : realm_playground.get_pygments_typeahead_list_for_composebox();
+        compose_ui.set_code_formatting_button_triggered(false);
+        return language_list;
     }
 
     // Only start the emoji autocompleter if : is directly after one
     // of the whitespace or punctuation chars we split on.
-    if (this.options.completions.emoji && current_token[0] === ":") {
+    if (ALLOWED_MARKDOWN_FEATURES.emoji && current_token[0] === ":") {
         // We don't want to match non-emoji emoticons such
         // as :P or :-p
         // Also, if the user has only typed a colon and nothing after,
@@ -715,7 +735,7 @@ export function get_candidates(query) {
         return emoji_collection;
     }
 
-    if (this.options.completions.mention && current_token[0] === "@") {
+    if (ALLOWED_MARKDOWN_FEATURES.mention && current_token[0] === "@") {
         current_token = current_token.slice(1);
         this.completing = "mention";
         // Silent mentions
@@ -739,7 +759,7 @@ export function get_candidates(query) {
         return commands;
     }
 
-    if (this.options.completions.slash && current_token[0] === "/") {
+    if (ALLOWED_MARKDOWN_FEATURES.slash && current_token[0] === "/") {
         current_token = current_token.slice(1);
 
         this.completing = "slash";
@@ -747,7 +767,7 @@ export function get_candidates(query) {
         return get_slash_commands_data();
     }
 
-    if (this.options.completions.stream && current_token[0] === "#") {
+    if (ALLOWED_MARKDOWN_FEATURES.stream && current_token[0] === "#") {
         if (current_token.length === 1) {
             return false;
         }
@@ -767,7 +787,7 @@ export function get_candidates(query) {
         return stream_data.get_unsorted_subs();
     }
 
-    if (this.options.completions.topic) {
+    if (ALLOWED_MARKDOWN_FEATURES.topic) {
         // Stream regex modified from marked.js
         // Matches '#**stream name** >' at the end of a split.
         const stream_regex = /#\*\*([^*>]+)\*\*\s?>$/;
@@ -803,7 +823,7 @@ export function get_candidates(query) {
             }
         }
     }
-    if (this.options.completions.timestamp) {
+    if (ALLOWED_MARKDOWN_FEATURES.timestamp) {
         const time_jump_regex = /<time(:([^>]*?)>?)?$/;
         if (time_jump_regex.test(split[0])) {
             this.completing = "time_jump";
@@ -813,7 +833,7 @@ export function get_candidates(query) {
     return false;
 }
 
-export function content_highlighter(item) {
+export function content_highlighter_html(item) {
     switch (this.completing) {
         case "emoji":
             return typeahead_helper.render_emoji(item);
@@ -1077,7 +1097,7 @@ export function initialize_topic_edit_typeahead(form_field, stream_name, dropup)
     const options = {
         fixed: true,
         dropup,
-        highlighter(item) {
+        highlighter_html(item) {
             return typeahead_helper.render_typeahead_item({primary: item});
         },
         sorter(items) {
@@ -1093,7 +1113,7 @@ export function initialize_topic_edit_typeahead(form_field, stream_name, dropup)
         },
         items: 5,
     };
-    form_field.typeahead(options);
+    bootstrap_typeahead.create(form_field, options);
 }
 
 function get_header_html() {
@@ -1121,18 +1141,7 @@ function get_header_html() {
 }
 
 export function initialize_compose_typeahead(selector) {
-    const completions = {
-        mention: true,
-        emoji: true,
-        silent_mention: true,
-        slash: true,
-        stream: true,
-        syntax: true,
-        topic: true,
-        timestamp: true,
-    };
-
-    $(selector).typeahead({
+    bootstrap_typeahead.create($(selector), {
         items: max_num_items,
         dropup: true,
         fixed: true,
@@ -1141,7 +1150,7 @@ export function initialize_compose_typeahead(selector) {
         // O(n) behavior in the number of users in the organization
         // inside the typeahead library.
         source: get_sorted_filtered_items,
-        highlighter: content_highlighter,
+        highlighter_html: content_highlighter_html,
         matcher() {
             return true;
         },
@@ -1150,10 +1159,9 @@ export function initialize_compose_typeahead(selector) {
         },
         updater: content_typeahead_selected,
         stopAdvance: true, // Do not advance to the next field on a Tab or Enter
-        completions,
         automated: compose_automated_selection,
         trigger_selection: compose_trigger_selection,
-        header: get_header_html,
+        header_html: get_header_html,
     });
 }
 
@@ -1164,18 +1172,18 @@ export function initialize({on_enter_send}) {
     $("form#send_message_form").on("keydown", (e) => handle_keydown(e, {on_enter_send}));
     $("form#send_message_form").on("keyup", handle_keyup);
 
-    $("input#stream_message_recipient_topic").typeahead({
+    bootstrap_typeahead.create($("input#stream_message_recipient_topic"), {
         source() {
             return topics_seen_for(compose_state.stream_id());
         },
         items: 3,
         fixed: true,
-        highlighter(item) {
+        highlighter_html(item) {
             return typeahead_helper.render_typeahead_item({primary: item});
         },
         sorter(items) {
             const sorted = typeahead_helper.sorter(this.query, items, (x) => x);
-            if (!sorted.includes(this.query)) {
+            if (sorted.length > 0 && !sorted.includes(this.query)) {
                 sorted.unshift(this.query);
             }
             return sorted;
@@ -1186,15 +1194,15 @@ export function initialize({on_enter_send}) {
             }
             return false;
         },
-        header: render_topic_typeahead_hint,
+        header_html: render_topic_typeahead_hint,
     });
 
-    $("#private_message_recipient").typeahead({
+    bootstrap_typeahead.create($("#private_message_recipient"), {
         source: get_pm_people,
         items: max_num_items,
         dropup: true,
         fixed: true,
-        highlighter(item) {
+        highlighter_html(item) {
             return typeahead_helper.render_person_or_user_group(item);
         },
         matcher() {

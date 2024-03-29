@@ -7,10 +7,12 @@ const {run_test} = require("./lib/test");
 const blueslip = require("./lib/zblueslip");
 const $ = require("./lib/zjquery");
 
-const input_pill = zrequire("input_pill");
-const pill_typeahead = zrequire("pill_typeahead");
 const noop = function () {};
 
+const bootstrap_typeahead = mock_esm("../src/bootstrap_typeahead");
+
+const input_pill = zrequire("input_pill");
+const pill_typeahead = zrequire("pill_typeahead");
 const peer_data = zrequire("peer_data");
 const people = zrequire("people");
 const stream_data = zrequire("stream_data");
@@ -105,7 +107,7 @@ for (const sub of subs) {
     stream_data.add_sub(sub);
 }
 
-run_test("set_up", ({mock_template}) => {
+run_test("set_up", ({mock_template, override}) => {
     mock_template("input_pill.hbs", true, (data, html) => {
         assert.equal(typeof data.display_value, "string");
         assert.equal(typeof data.has_image, "boolean");
@@ -130,14 +132,15 @@ run_test("set_up", ({mock_template}) => {
     }
 
     let opts = {};
-    $fake_input.typeahead = (config) => {
+    override(bootstrap_typeahead, "create", ($element, config) => {
+        assert.equal($element, $fake_input);
         assert.equal(config.items, 5);
         assert.ok(config.fixed);
         assert.ok(config.dropup);
         assert.ok(config.stopAdvance);
 
         assert.equal(typeof config.source, "function");
-        assert.equal(typeof config.highlighter, "function");
+        assert.equal(typeof config.highlighter_html, "function");
         assert.equal(typeof config.matcher, "function");
         assert.equal(typeof config.sorter, "function");
         assert.equal(typeof config.updater, "function");
@@ -155,9 +158,9 @@ run_test("set_up", ({mock_template}) => {
 
         (function test_highlighter() {
             if (opts.stream) {
-                // Test stream highlighter for widgets that allow stream pills.
+                // Test stream highlighter_html for widgets that allow stream pills.
                 assert.equal(
-                    config.highlighter.call(fake_stream_this, denmark),
+                    config.highlighter_html.call(fake_stream_this, denmark),
                     $fake_rendered_stream,
                 );
             }
@@ -165,17 +168,23 @@ run_test("set_up", ({mock_template}) => {
                 // If user is also allowed along with user_group
                 // then we should check that each of them rendered correctly.
                 assert.equal(
-                    config.highlighter.call(fake_group_this, testers),
+                    config.highlighter_html.call(fake_group_this, testers),
                     $fake_rendered_group,
                 );
-                assert.equal(config.highlighter.call(fake_person_this, me), $fake_rendered_person);
+                assert.equal(
+                    config.highlighter_html.call(fake_person_this, me),
+                    $fake_rendered_person,
+                );
             }
             if (opts.user && !opts.user_group) {
-                assert.equal(config.highlighter.call(fake_person_this, me), $fake_rendered_person);
+                assert.equal(
+                    config.highlighter_html.call(fake_person_this, me),
+                    $fake_rendered_person,
+                );
             }
             if (!opts.user && opts.user_group) {
                 assert.equal(
-                    config.highlighter.call(fake_group_this, testers),
+                    config.highlighter_html.call(fake_group_this, testers),
                     $fake_rendered_group,
                 );
             }
@@ -310,7 +319,7 @@ run_test("set_up", ({mock_template}) => {
         // input_pill_typeahead_called is set true if
         // no exception occurs in pill_typeahead.set_up.
         input_pill_typeahead_called = true;
-    };
+    });
 
     function test_pill_typeahead(opts) {
         pill_typeahead.set_up($fake_input, $pill_widget, opts);

@@ -28,6 +28,8 @@ export type User = {
     delivery_email: string | null;
     email: string;
     full_name: string;
+    // used for caching result of remove_diacritics.
+    name_with_diacritics_removed?: string;
     date_joined: string;
     is_active: boolean;
     is_owner: boolean;
@@ -40,8 +42,10 @@ export type User = {
     avatar_url?: string | null;
     avatar_version: number;
     profile_data: Record<number, ProfileData>;
-    is_missing_server_data?: boolean; // used for fake user objects.
-    is_inaccessible_user?: boolean; // used for inaccessible user objects.
+    // used for fake user objects.
+    is_missing_server_data?: boolean;
+    // used for inaccessible user objects.
+    is_inaccessible_user?: boolean;
 } & (
     | {
           is_bot: false;
@@ -788,7 +792,7 @@ export function sender_is_guest(message: Message): boolean {
 
 export function is_valid_bot_user(user_id: number): boolean {
     const user = maybe_get_user_by_id(user_id, true);
-    return user !== undefined && user.is_bot;
+    return user?.is_bot ?? false;
 }
 
 export function should_add_guest_user_indicator(user_id: number): boolean {
@@ -1194,9 +1198,12 @@ export function build_termlet_matcher(termlet: string): (user: User) => boolean 
 
     return function (user: User): boolean {
         let full_name = user.full_name;
+        // Only ignore diacritics if the query is plain ascii
         if (is_ascii) {
-            // Only ignore diacritics if the query is plain ascii
-            full_name = typeahead.remove_diacritics(full_name);
+            if (user.name_with_diacritics_removed === undefined) {
+                user.name_with_diacritics_removed = typeahead.remove_diacritics(full_name);
+            }
+            full_name = user.name_with_diacritics_removed;
         }
         const names = full_name.toLowerCase().split(" ");
 
@@ -1234,17 +1241,11 @@ export function filter_people_by_search_terms(
     // Loop through users and populate filtered_users only
     // if they include search_terms
     for (const user of users) {
-        const person = get_by_email(user.email);
-        // Get person object (and ignore errors)
-        if (!person?.full_name) {
-            continue;
-        }
-
         // Return user emails that include search terms
         const match = matchers.some((matcher) => matcher(user));
 
         if (match) {
-            filtered_users.set(person.user_id, true);
+            filtered_users.set(user.user_id, true);
         }
     }
 
@@ -1643,6 +1644,7 @@ export function set_full_name(person_obj: User, new_full_name: string): void {
     track_duplicate_full_name(new_full_name, person_obj.user_id);
     people_by_name_dict.set(new_full_name, person_obj);
     person_obj.full_name = new_full_name;
+    person_obj.name_with_diacritics_removed = undefined;
 }
 
 export function set_custom_profile_field_data(

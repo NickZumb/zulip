@@ -169,6 +169,7 @@ custom_profile_field_type = DictType(
         ("hint", str),
         ("field_data", str),
         ("order", int),
+        ("required", bool),
     ],
     optional_keys=[
         ("display_in_profile_summary", bool),
@@ -965,13 +966,23 @@ def check_realm_default_update(
     assert isinstance(event["value"], prop_type)
 
 
+authentication_method_dict = DictType(
+    required_keys=[
+        ("enabled", bool),
+        ("available", bool),
+    ],
+    optional_keys=[
+        ("unavailable_reason", str),
+    ],
+)
+
 authentication_dict = DictType(
     required_keys=[
-        ("Google", bool),
-        ("Dev", bool),
-        ("LDAP", bool),
-        ("GitHub", bool),
-        ("Email", bool),
+        ("Google", authentication_method_dict),
+        ("Dev", authentication_method_dict),
+        ("LDAP", authentication_method_dict),
+        ("GitHub", authentication_method_dict),
+        ("Email", authentication_method_dict),
     ]
 )
 

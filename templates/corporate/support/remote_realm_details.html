@@ -1,6 +1,6 @@
 <div class="remote-realm-container">
     <div class="remote-realm-information">
-        <span class="label">remote realm</span>
+        <span class="remote-label">Remote realm</span>
         <h3>{{ remote_realm.name }}</h3>
         {% if remote_realm.realm_locally_deleted %}
             <p class="support-section-header">Remote realm is locally deleted 🛑</p>
@@ -44,8 +44,15 @@
         {% include 'corporate/support/push_status_details.html' %}
     {% endwith %}
 
-
-    {% if remote_realm.plan_type != SPONSORED_PLAN_TYPE %}
+    {% if remote_server_deactivated %}
+    <div class="remote-support-sponsorship-container">
+        {% with %}
+            {% set sponsorship_data = support_data[remote_realm.id].sponsorship_data %}
+            {% set format_discount = format_discount %}
+            {% include 'corporate/support/sponsorship_details.html' %}
+        {% endwith %}
+    </div>
+    {% elif remote_realm.plan_type != SPONSORED_PLAN_TYPE %}
     <div class="remote-support-sponsorship-container">
         {% with %}
             {% set sponsorship_data = support_data[remote_realm.id].sponsorship_data %}
@@ -87,7 +94,7 @@
             {% include 'corporate/support/next_plan_details.html' %}
         {% endwith %}
     </div>
-    {% else %}
+    {% elif not remote_server_deactivated %}
     <div class="next-plan-container">
         {% with %}
             {% set is_current_plan_billable = support_data[remote_realm.id].plan_data.is_current_plan_billable %}
