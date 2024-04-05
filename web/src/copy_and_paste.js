@@ -84,18 +84,22 @@ function construct_copy_div($div, start_id, end_id) {
         // so we have to add new recipient's bar to final copied message
         // and wouldn't forget to add start_recipient's bar at the beginning of final message
         if (recipient_row_id !== last_recipient_row_id) {
-            $div.append(construct_recipient_header($row));
+            construct_recipient_header($row).appendTo($div);
             last_recipient_row_id = recipient_row_id;
             should_include_start_recipient_header = true;
         }
         const message = message_lists.current.get(rows.id($row));
         const $content = $(message.content);
-        $content.first().prepend(message.sender_full_name + ": ");
+        $content.first().prepend(
+            $("<span>")
+                .text(message.sender_full_name + ": ")
+                .contents(),
+        );
         $div.append($content);
     }
 
     if (should_include_start_recipient_header) {
-        $div.prepend(construct_recipient_header($start_row));
+        construct_recipient_header($start_row).prependTo($div);
     }
 }
 
