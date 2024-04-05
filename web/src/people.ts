@@ -1353,21 +1353,24 @@ export function is_duplicate_full_name(full_name: string): boolean {
     return ids !== undefined && ids.size > 1;
 }
 
-export function get_mention_syntax(full_name: string, user_id: number, silent: boolean): string {
+export function get_mention_syntax(full_name: string, user_id?: number, silent = false): string {
     let mention = "";
     if (silent) {
         mention += "@_**";
     } else {
         mention += "@**";
     }
-    mention += full_name;
-    if (!user_id) {
+    const wildcard_match = full_name_matches_wildcard_mention(full_name);
+    if (wildcard_match && user_id === undefined) {
+        mention += util.canonicalize_stream_synonym(full_name);
+    } else {
+        mention += full_name;
+    }
+
+    if (user_id === undefined && !wildcard_match) {
         blueslip.warn("get_mention_syntax called without user_id.");
     }
-    if (
-        (is_duplicate_full_name(full_name) || full_name_matches_wildcard_mention(full_name)) &&
-        user_id
-    ) {
+    if ((is_duplicate_full_name(full_name) || wildcard_match) && user_id !== undefined) {
         mention += `|${user_id}`;
     }
     mention += "**";
@@ -1375,7 +1378,7 @@ export function get_mention_syntax(full_name: string, user_id: number, silent: b
 }
 
 function full_name_matches_wildcard_mention(full_name: string): boolean {
-    return ["all", "everyone", "stream"].includes(full_name);
+    return ["all", "everyone", "stream", "channel", "topic"].includes(full_name);
 }
 
 export function _add_user(person: User): void {

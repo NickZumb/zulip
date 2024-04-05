@@ -352,11 +352,13 @@ function show_user_card_popover(
 
                 $popover.addClass(get_popover_classname(template_class));
                 $popover_title.append(
-                    render_user_card_popover_avatar({
-                        // See the load_medium_avatar comment for important background.
-                        user_avatar: people.small_avatar_url_for_person(user),
-                        user_is_guest: user.is_guest,
-                    }),
+                    $(
+                        render_user_card_popover_avatar({
+                            // See the load_medium_avatar comment for important background.
+                            user_avatar: people.small_avatar_url_for_person(user),
+                            user_is_guest: user.is_guest,
+                        }),
+                    ),
                 );
             },
             onHidden() {
@@ -686,11 +688,11 @@ function register_click_handlers() {
     $("body").on("click", ".user-card-popover-actions .narrow_to_private_messages", (e) => {
         const user_id = elem_to_user_id($(e.target).parents("ul"));
         const email = people.get_by_user_id(user_id).email;
+        narrow.by("dm", email, {trigger: "user sidebar popover"});
         hide_all();
         if (overlays.any_active()) {
             overlays.close_active();
         }
-        narrow.by("dm", email, {trigger: "user sidebar popover"});
         e.stopPropagation();
         e.preventDefault();
     });
@@ -698,11 +700,11 @@ function register_click_handlers() {
     $("body").on("click", ".user-card-popover-actions .narrow_to_messages_sent", (e) => {
         const user_id = elem_to_user_id($(e.target).parents("ul"));
         const email = people.get_by_user_id(user_id).email;
+        narrow.by("sender", email, {trigger: "user sidebar popover"});
         hide_all();
         if (overlays.any_active()) {
             overlays.close_active();
         }
-        narrow.by("sender", email, {trigger: "user sidebar popover"});
         e.stopPropagation();
         e.preventDefault();
     });
@@ -750,7 +752,10 @@ function register_click_handlers() {
     });
     $("body").on("click", ".user-card-popover-root .mention_user", (e) => {
         if (!compose_state.composing()) {
-            compose_actions.start("stream", {trigger: "sidebar user actions"});
+            compose_actions.start({
+                message_type: "stream",
+                trigger: "sidebar user actions",
+            });
         }
         const user_id = elem_to_user_id($(e.target).parents("ul"));
         const name = people.get_by_user_id(user_id).full_name;
@@ -846,7 +851,8 @@ function register_click_handlers() {
     $("body").on("click", ".respond_personal_button, .compose_private_message", (e) => {
         const user_id = elem_to_user_id($(e.target).parents("ul"));
         const email = people.get_by_user_id(user_id).email;
-        compose_actions.start("private", {
+        compose_actions.start({
+            message_type: "private",
             trigger: "popover send private",
             private_message_recipient: email,
         });

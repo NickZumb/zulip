@@ -1,3 +1,4 @@
+import itertools
 import json
 import operator
 import os
@@ -30,7 +31,6 @@ from unittest.mock import MagicMock, Mock, patch
 import orjson
 import responses
 import stripe
-import stripe.util
 import time_machine
 from django.conf import settings
 from django.core import signing
@@ -511,7 +511,7 @@ class StripeTestCase(ZulipTestCase):
         )
         if stripe_session is None:
             [stripe_session] = iter(stripe.checkout.Session.list(limit=1))
-        stripe_session_dict = stripe_session.to_dict_recursive()
+        stripe_session_dict = orjson.loads(orjson.dumps(stripe_session))
         stripe_session_dict["setup_intent"] = stripe_setup_intent.id
 
         event_payload = {
@@ -529,7 +529,7 @@ class StripeTestCase(ZulipTestCase):
 
     def send_stripe_webhook_event(self, event: stripe.Event) -> None:
         response = self.client_post(
-            "/stripe/webhook/", event.to_dict_recursive(), content_type="application/json"
+            "/stripe/webhook/", orjson.loads(orjson.dumps(event)), content_type="application/json"
         )
         assert response.status_code == 200
 
@@ -884,6 +884,10 @@ class StripeTest(StripeTestCase):
             "plan": None,
             "proration": False,
             "quantity": self.seat_count,
+            "period": {
+                "start": datetime_to_timestamp(self.now),
+                "end": datetime_to_timestamp(add_months(self.now, 12)),
+            },
         }
         for key, value in line_item_params.items():
             self.assertEqual(item0.get(key), value)
@@ -1022,6 +1026,10 @@ class StripeTest(StripeTestCase):
             "plan": None,
             "proration": False,
             "quantity": 123,
+            "period": {
+                "start": datetime_to_timestamp(self.now),
+                "end": datetime_to_timestamp(add_months(self.now, 12)),
+            },
         }
         for key, value in line_item_params.items():
             self.assertEqual(item.get(key), value)
@@ -4591,11 +4599,11 @@ class BillingHelpersTest(ZulipTestCase):
         for i, boundary in enumerate(period_boundaries):
             self.assertEqual(add_months(anchor, i), boundary)
         # Test next_month for small values
-        for last, next_ in zip(period_boundaries[:-1], period_boundaries[1:]):
+        for last, next_ in itertools.pairwise(period_boundaries):
             self.assertEqual(next_month(anchor, last), next_)
         # Test next_month for large values
         period_boundaries = [dt.replace(year=dt.year + 100) for dt in period_boundaries]
-        for last, next_ in zip(period_boundaries[:-1], period_boundaries[1:]):
+        for last, next_ in itertools.pairwise(period_boundaries):
             self.assertEqual(next_month(anchor, last), next_)
 
     def test_compute_plan_parameters(self) -> None:

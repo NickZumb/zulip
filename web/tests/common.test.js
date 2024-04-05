@@ -98,9 +98,9 @@ run_test("adjust_mac_kbd_tags mac", ({override}) => {
     ]);
 
     const fn_shortcuts = new Set(["Home", "End", "PgUp", "PgDn"]);
-    const inserted_fn_key = "<kbd>Fn</kbd> + ";
 
     override(navigator, "platform", "MacIntel");
+    $("<span>").contents = () => $("<contents-stub>");
 
     const test_items = [];
     let key_no = 1;
@@ -112,13 +112,13 @@ run_test("adjust_mac_kbd_tags mac", ({override}) => {
         assert.equal($stub.hasClass("arrow-key"), false);
         if (fn_shortcuts.has(old_key)) {
             $stub.before = ($elem) => {
-                assert.equal($elem, inserted_fn_key);
+                assert.equal($elem.selector, "<kbd>");
             };
         }
         if (old_key === "data-mac-following-key") {
             $stub.attr("data-mac-following-key", "⌥");
-            $stub.after = (plus, $elem) => {
-                assert.equal(plus, " + ");
+            $stub.after = ($plus, $elem) => {
+                assert.equal($plus.selector, "<contents-stub>");
                 assert.equal($elem.selector, "<kbd>");
                 assert.equal($elem.text(), $stub.attr("data-mac-following-key"));
             };
@@ -234,7 +234,13 @@ run_test("show password", () => {
         assert.ok(!$(password_selector).hasClass(absent_class));
     }
 
-    const ev = {
+    const click_ev = {
+        preventDefault() {},
+        stopPropagation() {},
+    };
+
+    const key_ev = {
+        key: "Enter",
         preventDefault() {},
         stopPropagation() {},
     };
@@ -242,15 +248,23 @@ run_test("show password", () => {
     set_attribute("password");
     common.setup_password_visibility_toggle("#id_password", password_selector);
 
-    const handler = $(password_selector).get_on_handler("click");
+    const click_handler = $(password_selector).get_on_handler("click");
 
-    handler(ev);
+    const key_handler = $(password_selector).get_on_handler("keydown");
+
+    click_handler(click_ev);
     check_assertion("text", "fa-eye", "fa-eye-slash");
 
-    handler(ev);
+    click_handler(click_ev);
     check_assertion("password", "fa-eye-slash", "fa-eye");
 
-    handler(ev);
+    key_handler(key_ev);
+    check_assertion("text", "fa-eye", "fa-eye-slash");
+
+    key_handler(key_ev);
+    check_assertion("password", "fa-eye-slash", "fa-eye");
+
+    click_handler(click_ev);
 
     common.reset_password_toggle_icons("#id_password", password_selector);
     check_assertion("password", "fa-eye-slash", "fa-eye");

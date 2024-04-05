@@ -44,7 +44,10 @@ function restore_draft(draft_id) {
     }
 
     overlays.close_overlay("drafts");
-    compose_actions.start(compose_args.type, compose_args);
+    compose_actions.start({
+        ...compose_args,
+        message_type: compose_args.type,
+    });
 }
 
 function remove_draft($draft_row) {
@@ -161,7 +164,7 @@ export function launch() {
             draft_lifetime: drafts.DRAFT_LIFETIME,
         });
         const $drafts_table = $("#drafts_table");
-        $drafts_table.append(rendered);
+        $drafts_table.append($(rendered));
         if ($("#drafts_table .overlay-message-row").length > 0) {
             $("#drafts_table .no-drafts").hide();
             // Update possible dynamic elements.

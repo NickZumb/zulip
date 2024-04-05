@@ -173,13 +173,15 @@ function initialize_navbar() {
 
 function initialize_compose_box() {
     $("#compose-container").append(
-        render_compose({
-            embedded: $("#compose").attr("data-embedded") === "",
-            file_upload_enabled: realm.max_file_upload_size_mib > 0,
-            giphy_enabled: giphy.is_giphy_enabled(),
-            max_stream_name_length: realm.max_stream_name_length,
-            max_topic_length: realm.max_topic_length,
-        }),
+        $(
+            render_compose({
+                embedded: $("#compose").attr("data-embedded") === "",
+                file_upload_enabled: realm.max_file_upload_size_mib > 0,
+                giphy_enabled: giphy.is_giphy_enabled(),
+                max_stream_name_length: realm.max_stream_name_length,
+                max_topic_length: realm.max_topic_length,
+            }),
+        ),
     );
     $(`.enter_sends_${user_settings.enter_sends}`).show();
     common.adjust_mac_kbd_tags(".open_enter_sends_dialog kbd");
@@ -611,6 +613,7 @@ export function initialize_everything(state_data) {
         "realm_private_message_policy",
         "realm_push_notifications_enabled",
         "realm_push_notifications_enabled_end_timestamp",
+        "realm_require_unique_names",
         "realm_send_welcome_emails",
         "realm_signup_announcements_stream_id",
         "realm_upload_quota_mib",
