@@ -15,7 +15,7 @@
   "features": {
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
-  "forwardPorts": [5432, 6379, 9991],
+  "forwardPorts": [5432, 6379, 9991, 9992, 9993, 9994],
   "postCreateCommand": "",
   "remoteUser": "root"
 }
