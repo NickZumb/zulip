@@ -33,19 +33,24 @@ export const COMMON_DROPDOWN_WIDGET_PARAMS = {
     disable_for_spectators: true,
 };
 
-export function filters_dropdown_options() {
+export function filters_dropdown_options(current_value: string | number | undefined): {
+    unique_id: string;
+    name: string;
+    description: string;
+    bold_current_selection: boolean;
+}[] {
     return [
         {
             unique_id: FILTERS.FOLLOWED_TOPICS,
             name: $t({defaultMessage: "Followed topics"}),
             description: $t({defaultMessage: "Only topics you follow"}),
-            bold_current_selection: this.current_value === FILTERS.FOLLOWED_TOPICS,
+            bold_current_selection: current_value === FILTERS.FOLLOWED_TOPICS,
         },
         {
             unique_id: FILTERS.UNMUTED_TOPICS,
             name: $t({defaultMessage: "Standard view"}),
             description: $t({defaultMessage: "All unmuted topics"}),
-            bold_current_selection: this.current_value === FILTERS.UNMUTED_TOPICS,
+            bold_current_selection: current_value === FILTERS.UNMUTED_TOPICS,
         },
         {
             unique_id: FILTERS.ALL_TOPICS,
@@ -53,12 +58,20 @@ export function filters_dropdown_options() {
             description: $t({
                 defaultMessage: "Includes muted streams and topics",
             }),
-            bold_current_selection: this.current_value === FILTERS.ALL_TOPICS,
+            bold_current_selection: current_value === FILTERS.ALL_TOPICS,
         },
     ];
 }
 
-export function show(opts) {
+export function show(opts: {
+    highlight_view_in_left_sidebar: () => void;
+    $view: JQuery;
+    update_compose: () => void;
+    is_visible: () => boolean;
+    set_visible: (value: boolean) => void;
+    complete_rerender: () => void;
+    is_recent_view?: boolean;
+}): void {
     if (narrow_state.has_shown_message_list_view) {
         message_lists.save_pre_narrow_offset_for_reload();
     }
@@ -99,10 +112,10 @@ export function show(opts) {
     }
 }
 
-export function hide(opts) {
-    const $focused_element = $(document.activeElement);
-    if (opts.$view.has($focused_element)) {
-        $focused_element.trigger("blur");
+export function hide(opts: {$view: JQuery; set_visible: (value: boolean) => void}): void {
+    const active_element = document.activeElement;
+    if (active_element !== null && opts.$view.has(active_element)) {
+        $(active_element).trigger("blur");
     }
 
     $("#message_feed_container").show();
