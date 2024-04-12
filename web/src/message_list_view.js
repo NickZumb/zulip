@@ -26,7 +26,6 @@ import * as narrow_state from "./narrow_state";
 import {page_params} from "./page_params";
 import * as people from "./people";
 import * as popovers from "./popovers";
-import * as reactions from "./reactions";
 import * as rendered_markdown from "./rendered_markdown";
 import * as rows from "./rows";
 import * as sidebar_ui from "./sidebar_ui";
@@ -525,8 +524,6 @@ export class MessageListView {
         };
 
         for (const message_container of message_containers) {
-            const message_reactions = reactions.get_message_reactions(message_container.msg);
-            message_container.msg.message_reactions = message_reactions;
             message_container.include_recipient = false;
 
             if (
@@ -778,8 +775,6 @@ export class MessageListView {
     }
 
     _get_message_template(message_container) {
-        const msg_reactions = reactions.get_message_reactions(message_container.msg);
-        message_container.msg.message_reactions = msg_reactions;
         const msg_to_render = {
             ...message_container,
             message_list_id: this.list.id,
@@ -1007,13 +1002,17 @@ export class MessageListView {
         }
 
         if (list === message_lists.current && messages_are_new) {
+            let sent_by_me = false;
+            if (messages.some((message) => message.sent_by_me)) {
+                sent_by_me = true;
+            }
             if (started_scrolled_up) {
                 return {
                     need_user_to_scroll: true,
                 };
             }
             const new_messages_height = this._new_messages_height(new_dom_elements);
-            const need_user_to_scroll = this._maybe_autoscroll(new_messages_height);
+            const need_user_to_scroll = this._maybe_autoscroll(new_messages_height, sent_by_me);
 
             if (need_user_to_scroll) {
                 return {
@@ -1057,10 +1056,11 @@ export class MessageListView {
         return scroll_limit;
     }
 
-    _maybe_autoscroll(new_messages_height) {
+    _maybe_autoscroll(new_messages_height, sent_by_me) {
         // If we are near the bottom of our feed (the bottom is visible) and can
         // scroll up without moving the pointer out of the viewport, do so, by
-        // up to the amount taken up by the new message.
+        // up to the amount taken up by the new message. For messages sent by
+        // the current user, we scroll it into view.
         //
         // returns `true` if we need the user to scroll
 
@@ -1092,6 +1092,13 @@ export class MessageListView {
             // If a popover is active, then we are pretty sure the
             // incoming message is not from the user themselves, so
             // we don't need to tell users to scroll down.
+            return false;
+        }
+
+        if (sent_by_me) {
+            // For messages sent by the current user we always autoscroll,
+            // updating the selected row if needed.
+            message_viewport.system_initiated_animate_scroll(new_messages_height, true);
             return false;
         }
 
