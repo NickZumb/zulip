@@ -138,10 +138,12 @@ function role_selected_handler(event, dropdown, widget) {
 function get_roles() {
     return [
         {unique_id: "0", name: $t({defaultMessage: "All roles"})},
-        ...Object.values(settings_config.user_role_values).map((user_role_value) => ({
-            unique_id: user_role_value.code.toString(),
-            name: user_role_value.description,
-        })),
+        ...Object.values(settings_config.user_role_values)
+            .map((user_role_value) => ({
+                unique_id: user_role_value.code.toString(),
+                name: user_role_value.description,
+            }))
+            .reverse(),
     ];
 }
 
@@ -468,7 +470,7 @@ function handle_bot_deactivation($tbody) {
 
         function handle_confirm() {
             const url = "/json/bots/" + encodeURIComponent(bot_id);
-            dialog_widget.submit_api_request(channel.del, url);
+            dialog_widget.submit_api_request(channel.del, url, {});
         }
 
         user_deactivation_ui.confirm_bot_deactivation(bot_id, handle_confirm, true);

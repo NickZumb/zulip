@@ -45,14 +45,16 @@ announcements, they can be disabled. [Learn more]({zulip_update_announcements_he
     ZulipUpdateAnnouncement(
         level=2,
         message="""
+**Web and desktop updates**
+
 - When you paste content into the compose box, Zulip will now do its best to preserve
-  the formatting, including links, bulleted lists, bold, italics, and more.
-  Pasting as plain text remains an alternative option. [Learn
-  more]({keyboard_shortcuts_basics_help_url}).
+the formatting, including links, bulleted lists, bold, italics, and more.
+Pasting as plain text remains an alternative option. [Learn
+more]({keyboard_shortcuts_basics_help_url}).
 - To [quote and reply]({quote_and_reply_help_url}) to part of a message, you can
-  now select the part that you want to quote.
+now select the part that you want to quote.
 - You can now hide the user list in the right sidebar to reduce distraction.
-  [Learn more]({user_list_help_url}).
+[Learn more]({user_list_help_url}).
 """.format(
             keyboard_shortcuts_basics_help_url="/help/keyboard-shortcuts#the-basics",
             user_list_help_url="/help/user-list",
@@ -182,7 +184,7 @@ def send_messages_and_update_level(
     realm.save(update_fields=["zulip_update_announcements_level"])
 
 
-def send_zulip_update_announcements() -> None:
+def send_zulip_update_announcements(skip_delay: bool) -> None:
     latest_zulip_update_announcements_level = get_latest_zulip_update_announcements_level()
 
     realms = get_realms_behind_zulip_update_announcements_level(
@@ -220,6 +222,7 @@ def send_zulip_update_announcements() -> None:
                 if (
                     realm_zulip_update_announcements_level == 0
                     and is_group_direct_message_sent_to_admins_within_days(realm, days=1)
+                    and not skip_delay
                 ):
                     continue
 
